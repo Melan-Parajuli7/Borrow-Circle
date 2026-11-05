@@ -1,6 +1,12 @@
-const app = require('./src/app')
-const {PORT} = require('./src/config/config')
+const app = require('./src/app');
+const { connectDB } = require('./src/config/db.config');
+const { PORT } = require('./src/config/config');
 
-app.listen(PORT, () => {
-    console.log(`Server is running on Number ${PORT}`)
-})
+const startServer = async () => {
+  await connectDB();            // connect first
+  app.listen(PORT, () => {      // then listen
+    console.log(`Server running on port ${PORT}`);
+  });
+};
+
+startServer();

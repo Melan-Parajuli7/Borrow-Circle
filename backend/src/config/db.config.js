@@ -1,5 +1,7 @@
 require('dotenv').config();
 const {Pool} = require('pg');
+const { Sequelize } = require('sequelize');
+
 
 const pool = new Pool({
     host : process.env.DB_HOST,
@@ -19,6 +21,7 @@ const connectDB = async () => {
         process.exit(1);  // exits if databse is unrecheable
     }
 };
+
 
 module.exports = {
     pool ,

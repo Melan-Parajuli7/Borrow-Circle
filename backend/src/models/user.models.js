@@ -41,7 +41,7 @@ const findById = async (id) => {
 };
 
 // find user by id wihh passowrd
-const findByIwithPassowrd = async (id) => {
+const findByIdwithPassowrd = async (id) => {
   const { rows } = await pool.query(`SELECT * FROM users WHERE id = $1`, [id]);
   return rows[0];
 };
@@ -69,7 +69,7 @@ module.exports = {
   findByEmail,
   findByEmailwithPassword,
   findById,
-  findByIwithPassowrd,
+  findByIdwithPassowrd,
   updateProfile,
   updatePassword,
 };

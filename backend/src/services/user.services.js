@@ -87,7 +87,7 @@ const changePassword = async (id, { currentPassword, newPassword }) => {
   if (!newPassword || newPassword.length < 8)
     throw new AppError("New Password must be at least 8 characters", 400);
 
-  const user = await User.findByEmailwithPassword(id);
+  const user = await User.findByIdwithPassowrd(id);   // <- by ID, not email
   if (!user || !(await bcrypt.compare(currentPassword || "", user.password)))
     throw new AppError("Current Password is incorrect", 401);
 

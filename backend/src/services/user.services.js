@@ -15,7 +15,7 @@ const { STRING } = require("sequelize");
 const generateToken = (user) =>
   jwt.sign(
     { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SCERET,
+    process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
   );
 
@@ -32,7 +32,7 @@ const register = async ({ full_name, email, password }) => {
   // allowed domains check field
   if (!isAllowedDomain(email))
     throw new AppError(
-      "Only @patancollege.edu.np and @study,beds.ac.uk emails are allowed",
+      "Only @patancollege.edu.np and @study.beds.ac.uk emails are allowed",
       403,
     );
 
@@ -47,7 +47,7 @@ const register = async ({ full_name, email, password }) => {
 
   try {
     // role is never read from the request, so everyone starts as 'user'
-    const user = await User.create({ full_name, email, password: [hashed] });
+    const user = await User.create({ full_name, email, password: hashed });
     return { user, token: generateToken(user) };
   } catch (err) {
     if (err.code === "23505")
@@ -58,7 +58,7 @@ const register = async ({ full_name, email, password }) => {
 
 const login = async ({ email, password }) => {
   email = normalizeEmail(email);
-  if (!emall || !password) throw new AppError("Invalid Credientals", 400);
+  if (!email || !password) throw new AppError("Invalid Credientals", 400);
 
   const user = await User.findByEmailwithPassword(email);
   if (!user || !(await bcrypt.compare(password, user.password)))

@@ -1,18 +1,34 @@
-const jwt = require('jsonwebtoken');
-const AppError = require('../utils/AppError');
+const jwt = require("jsonwebtoken");
+const AppError = require("../utils/appError"); 
 
-// Verifies "Authorization: Bearer <token>" and sets req.user
+// Reads the access token from the cookie first, then from
+// "Authorization: Bearer <token>" as a fallback (useful for mobile / testing)
 exports.protect = (req, res, next) => {
   const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) return next(new AppError('Not authenticated', 401));
+  const token =
+    req.cookies?.accessToken ||
+    (header?.startsWith("Bearer ") ? header.split(" ")[1] : null);
+
+  if (!token) return next(new AppError("Not authenticated", 401));
 
   try {
-    req.user = jwt.verify(header.split(' ')[1], process.env.JWT_SECRET);
+    // must be the ACCESS secret, not the old JWT_SECRET
+    req.user = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
     next();
-  } catch {
-    next(new AppError('Invalid or expired token', 401));
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      // the client sees this code and calls POST /api/users/refresh
+      return res.status(401).json({
+        success: false,
+        message: "Access token expired",
+        code: "TOKEN_EXPIRED",
+      });
+    }
+    next(new AppError("Invalid token", 401));
   }
 };
 
 exports.restrictTo = (...roles) => (req, res, next) =>
-  roles.includes(req.user.role) ? next() : next(new AppError('Forbidden', 403));
+  roles.includes(req.user.role)
+    ? next()
+    : next(new AppError("Forbidden", 403));

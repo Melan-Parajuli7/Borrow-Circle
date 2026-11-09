@@ -94,7 +94,6 @@ Students often need items like calculators, textbooks, lab equipment, or sports 
    ```
 
 ---
-
 ## License
 
 This project is developed for academic purposes only.

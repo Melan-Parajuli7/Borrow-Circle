@@ -12,7 +12,7 @@ exports.createRequest = asyncHandler(async (req, res) => {
 });
 
 exports.getMyRequests = asyncHandler(async (req, res) => {
-  const request = await RequestService.getMyRequest(req.user, req.query);
+  const result = await RequestService.getMyRequest(req.user, req.query);
   res.json({ success: true, ...result });
 });
 

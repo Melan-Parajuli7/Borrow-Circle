@@ -14,7 +14,7 @@ router.get("/:id" , ctrl.getRequest);
 
 router.patch("/:id/approve" , ctrl.approveRequest);
 router.patch("/:id/reject", ctrl.rejectRequest);
-router.patch("/:id/cancel", ctrl.cancelRequest);
+router.patch("/:id/cancel", ctrl.cancelRequest);  // only the requester can cancel their request 
 
 
 module.exports = router;

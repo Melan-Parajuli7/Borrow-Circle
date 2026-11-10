@@ -15,7 +15,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use("/api/users", userRoutes);
 app.use("/api/items", itemRoutes);
-app.use("app/borrows", borrowRequestRoutes);
+app.use("/api/requests", borrowRequestRoutes);
 
 // unknown routes return JSON instead of Express's default HTML page
 app.use((req, res) => {

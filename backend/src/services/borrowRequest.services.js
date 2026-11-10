@@ -20,7 +20,7 @@ const isValidDate = (s) => {
 };
 
 // Today as YYYY-MM-DD in the server's LOCAL time (toISOString would use UTC)
-const todayString = () => Date().toLocaleDateString('en-CA');
+const todayString = () => new Date().toLocaleDateString('en-CA');
 
 const daysBetween = (a, b) =>
   (Date.UTC(...b.split("-").map((n, i) => (i === 1 ? n - 1 : +n))) -
@@ -43,7 +43,7 @@ const pageParams = (query) => {
     const limit = Math.min(Math.max(parseInt(query.limit) || 10, 1), 50);
     const status = query.status ? String(query.status).toLowerCase() : undefined;
     if(status && !STATUSES.includes(status))
-        throw new AppError(`Status mus be one of ${STATUSES.join(", ")}, 400`);
+        throw new AppError(`Status must be one of ${STATUSES.join(", ")}, 400`);
     return { page , limit , status , offset: (page - 1) * limit};
 };
 
@@ -171,6 +171,7 @@ const approveRequest = async (id , user) => {
         // Only the person who SENT it can cancel
         if(request.requester_id !== user.id)
             throw new AppError("Only the requester can cancel this request", 403);
+        mustBePending(request);
 
         const updated = await BorrowRequest.updateStatus(request.id, "pending", "cancelled");
         if(!updated) throw new AppError("This request was just changed, please refresh", 409);

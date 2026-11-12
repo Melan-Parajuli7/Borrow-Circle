@@ -77,23 +77,7 @@ Students often need items like calculators, textbooks, lab equipment, or sports 
 
 ---
 
-## Project Timeline
 
-- **Start:** November 2026  
-- **Deadline:** 5 December 2026  
-
----
-
-## How to Run (Prototype)
-
-1. Open the Figma prototype link (provided by Frontend developer)
-2. Or run the Flutter project:
-   ```bash
-   flutter pub get
-   flutter run
-   ```
-
----
 
 ## License
 

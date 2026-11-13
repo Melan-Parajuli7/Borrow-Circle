@@ -17,11 +17,11 @@ const LOAN_SELECT = `
     o.full_name AS owner_name, o.avatar AS owner_avatar
 `;
 
-const LOAN_FORM = `
-        FROM loans l
-        JOIN items i ON i.id = l.item_id
-        JOIN users b ON b.id = l.borrower_id
-        JOIN users o ON o.id = l.owner_id
+const LOAN_FROM = `
+  FROM loans l
+  JOIN items i ON i.id = l.item_id
+  JOIN users b ON b.id = l.borrower_id
+  JOIN users o ON o.id = l.owner_id
 `;
 
 // Runs several queries as one unit: all succeed or none do
@@ -72,12 +72,11 @@ const findByRequestId = async (requestId) => {
 // handover code is only selected here (single loan); the service decides who may see it
 const findById = async (id) => {
   const { rows } = await pool.query(
-    `SELECT ${LOAN_SELECT} l.handover_code ${LOAN_FORM} WHERE l.id = $1`,
-    [id],
+    `SELECT ${LOAN_SELECT}, l.handover_code ${LOAN_FROM} WHERE l.id = $1`,
+    [id]
   );
   return rows[0];
 };
-
 // Copies item, poeple and dates Straight from the apporved request in ONE statement.
 // The Where re-checks status = 'approved', so it cant be bypassed by a race.
 
@@ -119,11 +118,11 @@ const findList = async (
     where += `AND l.status = $${params.length}`;
   }
   const count = await pool.query(
-    `SELECT COUNT(*)::int AS total ${LOAN_FORM} WHERE ${where}`,
+    `SELECT COUNT(*)::int AS total ${LOAN_FROM} WHERE ${where}`,
     params,
   );
   const { rows } = await pool.query(
-    `SELECT ${LOAN_SELECT} ${LOAN_FORM}
+    `SELECT ${LOAN_SELECT} ${LOAN_FROM}
         WHERE ${where}
         ORDER BY l.created_at DESC
         LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
@@ -139,18 +138,17 @@ const findByOwner = (userId, opts) =>
 
 // Handover: loans gets a timestamp AND the item becomes unavailable together.
 // The Where makes it atomic: it only matches if the handover hasn't happened yet.
-const markHandOver = (loanId) =>
+const markHandedOver = (loanId) =>
   withTransaction(async (client) => {
-    const { rows } = await pool.query(
-      `UPDATE loans SET hand_over_at = NOW()
-            WHERE id = $1 AND status = 'active' AND handed_over_at IS NULL
-            RETURNING item_id`,
-      [loanId],
+    const { rows } = await client.query(
+      `UPDATE loans SET handed_over_at = NOW()
+       WHERE id = $1 AND status = 'active' AND handed_over_at IS NULL
+       RETURNING item_id`,
+      [loanId]
     );
     if (!rows[0]) return false;
-    await client.query("UPDATE items SET is_availabe = FALSE WHERE id = $1", [
-      rows[0].item_id,
-    ]);
+
+    await client.query("UPDATE items SET is_available = FALSE WHERE id = $1", [rows[0].item_id]);
     return true;
   });
 
@@ -159,12 +157,13 @@ const markReturned = (loanId) =>
   withTransaction(async (client) => {
     const { rows } = await client.query(
       `UPDATE loans SET status = 'returned', returned_at = NOW()
-            WHERE id = $1 AND hand_over_at IS NOT NULL returned_at IS NULL
-            RETURNING item_id`,
-      [loanId],
+       WHERE id = $1 AND handed_over_at IS NOT NULL AND returned_at IS NULL
+       RETURNING item_id`,
+      [loanId]
     );
-    if(!rows[0]) return false;
-    await client.query("UPDATE items SET is_availabel = TRUE WHERE if = $1", [rows[0].item_id]);
+    if (!rows[0]) return false;
+
+    await client.query("UPDATE items SET is_available = TRUE WHERE id = $1", [rows[0].item_id]);
     return true;
   });
 
@@ -177,6 +176,6 @@ module.exports = {
     itemIsOnLoan,
     findByBorrower,
     findByOwner,
-    markHandOver,
+    markHandedOver,
     markReturned
 }

@@ -4,7 +4,7 @@ const REVIEW_SELECT = `
     r.id, r.loan_id , r.reviewer_id, r.reviewee_id, r.rating, r.comment, r.created_at,
     rv.full_name AS reviewer_name , rv.avatar AS reviewer_avatar,
     re.full_name AS reviewee_name,
-    i.tilte AS item_title
+    i.title AS item_title
 `;
 
 const REVIEW_FORM = `

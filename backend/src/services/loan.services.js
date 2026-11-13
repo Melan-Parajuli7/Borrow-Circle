@@ -41,10 +41,10 @@ const paginated = ({loans , total}, {page , limit}) => ({
 
 // Loads a loan (404 if missing). Refreshes overdue statuses first.
 const load = async (id) => {
-    await Loan.markHandOver();
-    const loan = await Loan.findById(parseId(id , "loan id"));
-    if(!loan) throw new AppError("Loan not found", 404);
-    return loan;
+  await Loan.markOverdue();                       // <- not markHandOver
+  const loan = await Loan.findById(parseId(id, "loan id"));
+  if (!loan) throw new AppError("Loan not found", 404);
+  return loan;
 };
 
 const mustbeOwner = (loan, user, action) => {
@@ -86,13 +86,13 @@ const createLoan = async (user , body = {}) => {
 // ---- reads ----
 
 const getBorrowing = async (user , query) => {
-    await Loan.markHandOver();
+    await Loan.markHandedOver();
     const p = pageParams(query);
     return paginated(await Loan.findByBorrower(user.id , p), p);
 };
 
 const getLending = async (user , query) => {
-    await Loan.markHandOver();
+    await Loan.markHandedOver();
     const p = pageParams(query);
     return paginated(await Loan.findByOwner(user.id , p), p);
 };
@@ -124,7 +124,7 @@ const handoverLoan = async (id , user , body = {}) => {
     if( await Loan.itemIsOnLoan(loan.item_id))
         throw new AppError("This item is still out on anotther loan", 409);
 
-    if(!(await Loan.markHandOver(loan.id)))
+    if(!(await Loan.markHandedOver(loan.id)))
         throw new AppError("This loan was just changed, please refresh", 409);
 
     return present(await Loan.findById(loan.id), user);     

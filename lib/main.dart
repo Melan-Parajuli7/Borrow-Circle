@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-// Entry point of the app. Flutter starts running from main().
+import 'package:borrowcircle/controller/auth_controller.dart';
+import 'package:borrowcircle/controller/group_controller.dart';
+import 'package:borrowcircle/controller/item_controller.dart';
+import 'package:borrowcircle/controller/loan_controller.dart';
+import 'package:borrowcircle/controller/request_controller.dart';
+import 'package:borrowcircle/controller/review_controller.dart';
+import 'package:borrowcircle/core/theme.dart';
+import 'package:borrowcircle/pages/splash_page.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -8,31 +17,23 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      // App name shown in the task switcher
-      title: 'BorrowCircle',
-
-      // Hides the red "DEBUG" banner
-      debugShowCheckedModeBanner: false,
-
-      // App-wide theme. Every page uses these colors by default.
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0F766E), // primary from the design
-          secondary: const Color(0xFF10B981), // secondary green
-          tertiary: const Color(0xFFF59E0B), // tertiary amber
-        ),
-        // The design uses white page backgrounds
-        scaffoldBackgroundColor: Colors.white,
-      ),
-
-      // First screen shown when the app opens.
-      // Temporary test screen. Replace with SplashPage() once auth.dart is ready.
-      home: const Scaffold(
-        body: Center(child: Text('BorrowCircle')),
+    // MultiProvider makes every controller available to every page.
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthController()),
+        ChangeNotifierProvider(create: (_) => ItemController()),
+        ChangeNotifierProvider(create: (_) => RequestController()),
+        ChangeNotifierProvider(create: (_) => LoanController()),
+        ChangeNotifierProvider(create: (_) => ReviewController()),
+        ChangeNotifierProvider(create: (_) => GroupController()),
+      ],
+      child: MaterialApp(
+        title: 'BorrowCircle',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        home: const SplashPage(),
       ),
     );
   }

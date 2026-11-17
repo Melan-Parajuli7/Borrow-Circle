@@ -77,12 +77,7 @@ Students often need items like calculators, textbooks, lab equipment, or sports 
 
 ---
 
-## Project Timeline
 
-- **Start:** November 2026  
-- **Deadline:** 5 December 2026  
-
----
 
 ## How to Run (Prototype)
 

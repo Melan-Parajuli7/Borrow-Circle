@@ -1,4 +1,4 @@
-# BorrowCircle
+# Borrow-Circle
 
 **A Campus Item Lending Mobile Application**
 

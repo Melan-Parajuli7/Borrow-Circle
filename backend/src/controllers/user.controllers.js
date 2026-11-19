@@ -1,6 +1,7 @@
 const UserService = require("../services/user.services");
 const { deleteOldFile } = require("../config/multer.config");
 const { ACCESS_MS, REFRESH_MS } = require("../config/tokenConfig");
+const { sendRegistrationEmail } = require("../services/emailMailer.services");
 
 // forwards async errors to the error middleware
 const asyncHandler = (fn) => (req, res, next) =>
@@ -39,6 +40,14 @@ const clearAuthCookies = (res) => {
 
 exports.register = asyncHandler(async (req, res) => {
   const { user, accessToken, refreshToken } = await UserService.register(req.body);
+  
+  try {
+    await sendRegistrationEmail(user.email, user.full_name);
+  } catch (emailError) {
+    console.error("Failed to send registration email:", emailError.message);
+    // We intentionally do not throw here
+  };
+  
   setAuthCookies(res, { accessToken, refreshToken });
   res.status(201).json({ success: true, user });
 });

@@ -3,10 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:borrowcircle/controller/account_controller.dart';
 import 'package:borrowcircle/controller/auth_controller.dart';
+import 'package:borrowcircle/controller/fingerprint_controller.dart';
 import 'package:borrowcircle/controller/group_controller.dart';
 import 'package:borrowcircle/controller/item_controller.dart';
 import 'package:borrowcircle/controller/loan_controller.dart';
+import 'package:borrowcircle/controller/notification_controller.dart';
 import 'package:borrowcircle/controller/request_controller.dart';
 import 'package:borrowcircle/controller/review_controller.dart';
 import 'package:borrowcircle/core/colors.dart';
@@ -18,6 +21,7 @@ import 'package:borrowcircle/pages/item_details.dart';
 import 'package:borrowcircle/pages/loans.dart';
 import 'package:borrowcircle/pages/profile.dart';
 import 'package:borrowcircle/pages/requests.dart';
+import 'package:borrowcircle/pages/account.dart';
 
 // =====================================================================
 //  HomePage = the main screen with the bottom bar (Home / Requests / Loans / Profile)
@@ -35,7 +39,12 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     AppNav.tabIndex.value = 0;
     AppNav.tabIndex.addListener(_onTabChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadEverything());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadEverything();
+      context.read<AccountController>().loadPreferences();
+      context.read<NotificationController>().load();
+      context.read<FingerprintController>().load();
+    });
   }
 
   @override
@@ -88,17 +97,29 @@ class _HomePageState extends State<HomePage> {
         children: const [HomeTab(), RequestsPage(), LoansPage(), ProfilePage()],
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.border))),
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: AppColors.border)),
+        ),
         child: NavigationBar(
           selectedIndex: index,
           onDestinationSelected: (i) => AppNav.tabIndex.value = i,
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
             NavigationDestination(
-                icon: Icon(Icons.inbox_outlined), selectedIcon: Icon(Icons.inbox), label: 'Requests'),
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.inbox_outlined),
+              selectedIcon: Icon(Icons.inbox),
+              label: 'Requests',
+            ),
             NavigationDestination(icon: Icon(Icons.repeat), label: 'Loans'),
             NavigationDestination(
-                icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
+              label: 'Profile',
+            ),
           ],
         ),
       ),
@@ -159,15 +180,25 @@ class _HomeTabState extends State<HomeTab> {
                     Row(
                       children: [
                         Expanded(
-                          child: Text('Hello, $firstName',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontSize: 30, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                          child: Text(
+                            'Hello, $firstName',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textDark,
+                            ),
+                          ),
                         ),
                         SquareIconButton(
                           icon: Icons.notifications_none,
-                          onTap: () => showSnack(context, 'No new notifications.'),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const NotificationsPage(),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -175,17 +206,30 @@ class _HomeTabState extends State<HomeTab> {
                     // University + "List an item"
                     Row(
                       children: [
-                        const Icon(Icons.location_on_outlined, color: AppColors.primary, size: 22),
+                        const Icon(
+                          Icons.location_on_outlined,
+                          color: AppColors.primary,
+                          size: 22,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Text(AppStatic.universityOf(user?.email ?? ''),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: AppColors.textGrey, fontSize: 16)),
+                          child: Text(
+                            AppStatic.universityOf(user?.email ?? ''),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.textGrey,
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
                         TextButton(
                           onPressed: () => Navigator.push(
-                              context, MaterialPageRoute(builder: (_) => const AddItemPage())),
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AddItemPage(),
+                            ),
+                          ),
                           child: const Text('+ List an item'),
                         ),
                       ],
@@ -198,10 +242,17 @@ class _HomeTabState extends State<HomeTab> {
                       textInputAction: TextInputAction.search,
                       decoration: InputDecoration(
                         hintText: 'What do you need for campus?',
-                        prefixIcon: const Icon(Icons.search, color: AppColors.textGrey),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: AppColors.textGrey,
+                        ),
                         suffixIcon: IconButton(
-                          icon: Icon(Icons.tune,
-                              color: ctrl.hasActiveFilters ? AppColors.tertiary : AppColors.primary),
+                          icon: Icon(
+                            Icons.tune,
+                            color: ctrl.hasActiveFilters
+                                ? AppColors.tertiary
+                                : AppColors.primary,
+                          ),
                           onPressed: () => showItemFilterSheet(context),
                         ),
                       ),
@@ -216,8 +267,10 @@ class _HomeTabState extends State<HomeTab> {
                     SectionHeader(
                       title: 'Ready to borrow',
                       actionText: 'See all',
-                      onAction: () =>
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const AllItemsPage())),
+                      onAction: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AllItemsPage()),
+                      ),
                     ),
                     const SizedBox(height: 14),
                   ],
@@ -227,7 +280,10 @@ class _HomeTabState extends State<HomeTab> {
 
             // ----- the grid (or loading / error / empty) -----
             if (ctrl.isLoading && ctrl.items.isEmpty)
-              const SliverFillRemaining(hasScrollBody: false, child: Center(child: CircularProgressIndicator()))
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: CircularProgressIndicator()),
+              )
             else if (ctrl.error != null && ctrl.items.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
@@ -243,8 +299,10 @@ class _HomeTabState extends State<HomeTab> {
                   action: SizedBox(
                     width: 180,
                     child: ElevatedButton(
-                      onPressed: () =>
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const AddItemPage())),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AddItemPage()),
+                      ),
                       child: const Text('List an item'),
                     ),
                   ),
@@ -265,7 +323,9 @@ class _HomeTabState extends State<HomeTab> {
                       item: items[i],
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => ItemDetailsPage(item: items[i])),
+                        MaterialPageRoute(
+                          builder: (_) => ItemDetailsPage(item: items[i]),
+                        ),
                       ),
                     ),
                     childCount: items.length,

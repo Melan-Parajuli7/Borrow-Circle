@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:borrowcircle/controller/auth_controller.dart';
+import 'package:borrowcircle/controller/fingerprint_controller.dart';
 import 'package:borrowcircle/core/colors.dart';
 import 'package:borrowcircle/core/validators.dart';
 import 'package:borrowcircle/core/widgets.dart';
@@ -31,8 +32,23 @@ class _AuthPageState extends State<AuthPage> {
   final _confirm = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<FingerprintController>().load();
+    });
+  }
+
+  @override
   void dispose() {
-    for (final c in [_loginEmail, _loginPassword, _name, _email, _password, _confirm]) {
+    for (final c in [
+      _loginEmail,
+      _loginPassword,
+      _name,
+      _email,
+      _password,
+      _confirm,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -51,7 +67,39 @@ class _AuthPageState extends State<AuthPage> {
     final auth = context.read<AuthController>();
     final ok = await auth.login(_loginEmail.text, _loginPassword.text);
     if (!mounted) return;
-    ok ? _goHome() : showSnack(context, auth.error ?? 'Login failed', isError: true);
+    ok
+        ? _goHome()
+        : showSnack(context, auth.error ?? 'Login failed', isError: true);
+  }
+
+  Future<void> _fingerprintLogin() async {
+    final fingerprint = context.read<FingerprintController>();
+    if (!fingerprint.enabled) {
+      showSnack(context, 'Enable fingerprint login in Account settings first.');
+      return;
+    }
+
+    final authenticated = await fingerprint.authenticate();
+    if (!mounted) return;
+    if (!authenticated) {
+      showSnack(
+        context,
+        fingerprint.error ?? 'Fingerprint authentication failed',
+        isError: true,
+      );
+      return;
+    }
+
+    final auth = context.read<AuthController>();
+    await auth.tryAutoLogin();
+    if (!mounted) return;
+    auth.isLoggedIn
+        ? _goHome()
+        : showSnack(
+            context,
+            'No saved login session. Log in once with your password.',
+            isError: true,
+          );
   }
 
   Future<void> _signup() async {
@@ -59,7 +107,13 @@ class _AuthPageState extends State<AuthPage> {
     final auth = context.read<AuthController>();
     final ok = await auth.register(_name.text, _email.text, _password.text);
     if (!mounted) return;
-    ok ? _goHome() : showSnack(context, auth.error ?? 'Registration failed', isError: true);
+    ok
+        ? _goHome()
+        : showSnack(
+            context,
+            auth.error ?? 'Registration failed',
+            isError: true,
+          );
   }
 
   @override
@@ -82,14 +136,22 @@ class _AuthPageState extends State<AuthPage> {
                     const SizedBox(height: 14),
                     Text(
                       isLogin ? 'Good to see you.' : 'Join your Campus circle.',
-                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textDark,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       isLogin
                           ? 'Log in to borrow, lend and connect with your university community.'
                           : 'Create an account to borrow, lend and connect with your University Community',
-                      style: const TextStyle(fontSize: 16, height: 1.4, color: AppColors.textGrey),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        height: 1.4,
+                        color: AppColors.textGrey,
+                      ),
                     ),
                     const SizedBox(height: 22),
                     SegmentedTabs(
@@ -100,25 +162,37 @@ class _AuthPageState extends State<AuthPage> {
                     const SizedBox(height: 22),
                     isLogin ? _loginForm(loading) : _signupForm(loading),
                     const SizedBox(height: 18),
-                    const InfoBanner(text: 'Your university email keeps BorrowCircle safe and campus-only.'),
+                    const InfoBanner(
+                      text: 'Your university email keeps BorrowCircle safe and campus-only.',
+                    ),
                     const SizedBox(height: 18),
                     Center(
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(isLogin ? 'New here?' : 'Already have an account?',
-                              style: const TextStyle(color: AppColors.textGrey)),
+                          Text(
+                            isLogin ? 'New here?' : 'Already have an account?',
+                            style: const TextStyle(color: AppColors.textGrey),
+                          ),
                           TextButton(
-                            onPressed: () => setState(() => _tab = isLogin ? 1 : 0),
-                            child: Text(isLogin ? 'Create an account' : 'Log in'),
+                            onPressed: () =>
+                                setState(() => _tab = isLogin ? 1 : 0),
+                            child: Text(
+                              isLogin ? 'Create an account' : 'Log in',
+                            ),
                           ),
                         ],
                       ),
                     ),
                     const Center(
-                      child: Text('By continuing, you agree to our Terms of Service\nand Privacy Policy.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: AppColors.textGrey, fontSize: 13)),
+                      child: Text(
+                        'By continuing, you agree to our Terms of Service\nand Privacy Policy.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textGrey,
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -154,12 +228,26 @@ class _AuthPageState extends State<AuthPage> {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () => showSnack(context, 'Password reset is not available yet.'),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+              ),
               child: const Text('Forgot password?'),
             ),
           ),
           const SizedBox(height: 4),
-          PrimaryButton(text: 'Log in', icon: Icons.arrow_forward, isLoading: loading, onPressed: _login),
+          PrimaryButton(
+            text: 'Log in',
+            icon: Icons.arrow_forward,
+            isLoading: loading,
+            onPressed: _login,
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _fingerprintLogin,
+            icon: const Icon(Icons.fingerprint),
+            label: const Text('Use fingerprint'),
+          ),
         ],
       ),
     );
@@ -202,8 +290,113 @@ class _AuthPageState extends State<AuthPage> {
             validator: Validators.confirmPassword(() => _password.text),
           ),
           const SizedBox(height: 24),
-          PrimaryButton(text: 'Create Account', icon: Icons.arrow_forward, isLoading: loading, onPressed: _signup),
+          PrimaryButton(
+            text: 'Create Account',
+            icon: Icons.arrow_forward,
+            isLoading: loading,
+            onPressed: _signup,
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class ForgotPasswordPage extends StatefulWidget {
+  const ForgotPasswordPage({super.key});
+
+  @override
+  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+}
+
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _email = TextEditingController();
+
+  @override
+  void dispose() {
+    _email.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Reset unavailable'),
+        content: const Text(
+          'Password reset requires backend support. No reset email has been sent.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            const ScreenHeader(title: 'Forgot password'),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.lock_reset_outlined,
+                        size: 72,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(height: 18),
+                      const Text(
+                        'Reset your password',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Enter your university email to check password recovery options.',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textGrey,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      AppTextField(
+                        controller: _email,
+                        label: 'University email',
+                        hint: 'you@patancollege.edu.np',
+                        suffixIcon: Icons.mail_outline,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: Validators.email,
+                      ),
+                      const SizedBox(height: 24),
+                      PrimaryButton(
+                        text: 'Continue',
+                        icon: Icons.arrow_forward,
+                        onPressed: _submit,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -33,7 +33,9 @@ class Validators {
     return null;
   }
 
-  static String? Function(String?) confirmPassword(String Function() original) =>
+  static String? Function(String?) confirmPassword(
+    String Function() original,
+  ) =>
       (v) => v != original() ? 'Passwords do not match' : null;
 
   static String? itemTitle(String? v) {
@@ -51,9 +53,20 @@ class Validators {
   static String? maxLength(String? v, int max) =>
       (v != null && v.trim().length > max) ? 'Max $max characters' : null;
 
+  static String? mobile(String? v) {
+    final value = (v ?? '').trim();
+    if (value.isEmpty) return null;
+    if (!RegExp(r'^\+?[0-9]{7,15}$').hasMatch(value)) {
+      return 'Enter a valid mobile number';
+    }
+    return null;
+  }
+
   static String? handoverCode(String? v) {
     final c = (v ?? '').trim();
-    if (c.length != 6 || int.tryParse(c) == null) return 'Enter the 6-digit code';
+    if (c.length != 6 || int.tryParse(c) == null) {
+      return 'Enter the 6-digit code';
+    }
     return null;
   }
 }

@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:borrowcircle/controller/account_controller.dart';
 import 'package:borrowcircle/controller/auth_controller.dart';
+import 'package:borrowcircle/controller/calendar_controller.dart';
+import 'package:borrowcircle/controller/fingerprint_controller.dart';
 import 'package:borrowcircle/controller/group_controller.dart';
 import 'package:borrowcircle/controller/item_controller.dart';
 import 'package:borrowcircle/controller/loan_controller.dart';
+import 'package:borrowcircle/controller/notification_controller.dart';
+import 'package:borrowcircle/controller/password_controller.dart';
 import 'package:borrowcircle/controller/request_controller.dart';
 import 'package:borrowcircle/controller/review_controller.dart';
 import 'package:borrowcircle/core/theme.dart';
@@ -23,6 +28,11 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthController()),
+        ChangeNotifierProvider(create: (_) => AccountController()),
+        ChangeNotifierProvider(create: (_) => FingerprintController()),
+        ChangeNotifierProvider(create: (_) => CalendarController()),
+        ChangeNotifierProvider(create: (_) => NotificationController()),
+        ChangeNotifierProvider(create: (_) => PasswordController()),
         ChangeNotifierProvider(create: (_) => ItemController()),
         ChangeNotifierProvider(create: (_) => RequestController()),
         ChangeNotifierProvider(create: (_) => LoanController()),

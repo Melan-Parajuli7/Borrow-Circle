@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:borrowcircle/controller/apicall.dart';
 import 'package:borrowcircle/controller/auth_controller.dart';
@@ -12,7 +13,9 @@ import 'package:borrowcircle/core/colors.dart';
 import 'package:borrowcircle/core/static.dart';
 import 'package:borrowcircle/core/validators.dart';
 import 'package:borrowcircle/core/widgets.dart';
+import 'package:borrowcircle/pages/account.dart';
 import 'package:borrowcircle/pages/groups.dart';
+import 'package:borrowcircle/pages/calendar.dart';
 import 'package:borrowcircle/pages/loans.dart';
 import 'package:borrowcircle/pages/my_listings.dart';
 
@@ -37,7 +40,12 @@ class ProfilePage extends StatelessWidget {
           '\u2022 The owner confirms the return, then both can leave a review.\n'
           '\u2022 Return items in the same condition.',
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }
@@ -53,7 +61,9 @@ class ProfilePage extends StatelessWidget {
     if (user == null) return const SizedBox.shrink();
 
     final myGroups = groups.managedBy(user.id).length;
-    final rating = reviews.summary.total == 0 ? '\u2014' : '${reviews.summary.average.toStringAsFixed(1)} \u2605';
+    final rating = reviews.summary.total == 0
+        ? '\u2014'
+        : '${reviews.summary.average.toStringAsFixed(1)} \u2605';
 
     return SafeArea(
       child: Column(
@@ -77,21 +87,46 @@ class ProfilePage extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               children: [
-                Center(child: UserAvatar(name: user.fullName, avatar: user.avatar, radius: 64)),
+                Center(
+                  child: UserAvatar(
+                    name: user.fullName,
+                    avatar: user.avatar,
+                    radius: 64,
+                  ),
+                ),
                 const SizedBox(height: 14),
                 Center(
-                  child: Text(user.fullName,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                  child: Text(
+                    user.fullName,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textDark,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 const Center(child: PillTag(text: 'Verified student')),
                 const SizedBox(height: 10),
                 Center(
-                  child: Text(AppStatic.universityOf(user.email),
-                      style: const TextStyle(color: AppColors.textGrey, fontSize: 16)),
+                  child: Text(
+                    AppStatic.universityOf(user.email),
+                    style: const TextStyle(
+                      color: AppColors.textGrey,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
-                Center(child: Text(user.email, style: const TextStyle(color: AppColors.textGrey, fontSize: 16))),
+                Center(
+                  child: Text(
+                    user.email,
+                    style: const TextStyle(
+                      color: AppColors.textGrey,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
                 Center(
                   child: TextButton(
                     onPressed: () => _open(context, const EditProfilePage()),
@@ -103,10 +138,16 @@ class ProfilePage extends StatelessWidget {
                 // stats
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 18),
-                  decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(22)),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight,
+                    borderRadius: BorderRadius.circular(22),
+                  ),
                   child: Row(
                     children: [
-                      _Stat(value: '${loans.completedCount}', label: 'Completed loans'),
+                      _Stat(
+                        value: '${loans.completedCount}',
+                        label: 'Completed loans',
+                      ),
                       _Stat(value: '${items.myTotal}', label: 'Items listed'),
                       _Stat(value: rating, label: 'Peer rating'),
                     ],
@@ -114,47 +155,69 @@ class ProfilePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
 
-                const Text('Your circle',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                const Text(
+                  'Your circle',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textDark,
+                  ),
+                ),
                 const SizedBox(height: 12),
-                _MenuCard(children: [
-                  _MenuRow(
-                    icon: Icons.groups_outlined,
-                    title: 'My groups',
-                    trailing: '$myGroups groups',
-                    onTap: () => _open(context, const GroupsPage()),
-                  ),
-                  _MenuRow(
-                    icon: Icons.inventory_2_outlined,
-                    title: 'My listings',
-                    trailing: '${items.myTotal} items',
-                    onTap: () => _open(context, const MyListingsPage()),
-                  ),
-                  _MenuRow(
-                    icon: Icons.history,
-                    title: 'Borrowing history',
-                    trailing: '${loans.completedBorrowing.length} completed',
-                    onTap: () => _open(context, const HistoryPage()),
-                    isLast: true,
-                  ),
-                ]),
+                _MenuCard(
+                  children: [
+                    _MenuRow(
+                      icon: Icons.groups_outlined,
+                      title: 'My groups',
+                      trailing: '$myGroups groups',
+                      onTap: () => _open(context, const GroupsPage()),
+                    ),
+                    _MenuRow(
+                      icon: Icons.inventory_2_outlined,
+                      title: 'My listings',
+                      trailing: '${items.myTotal} items',
+                      onTap: () => _open(context, const MyListingsPage()),
+                    ),
+                    _MenuRow(
+                      icon: Icons.history,
+                      title: 'Borrowing history',
+                      trailing: '${loans.completedBorrowing.length} completed',
+                      onTap: () => _open(context, const HistoryPage()),
+                    ),
+                    _MenuRow(
+                      icon: Icons.calendar_month_outlined,
+                      title: 'Loan calendar',
+                      onTap: () => _open(context, const CalendarPage()),
+                      isLast: true,
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 16),
-                _MenuCard(children: [
-                  _MenuRow(
-                    icon: Icons.notifications_none,
-                    title: 'Notifications',
-                    onTap: () => showSnack(context, 'No new notifications.'),
-                  ),
-                  _MenuRow(
-                    icon: Icons.help_outline,
-                    title: 'Help & campus guidelines',
-                    onTap: () => _showHelp(context),
-                    isLast: true,
-                  ),
-                ]),
+                _MenuCard(
+                  children: [
+                    _MenuRow(
+                      icon: Icons.notifications_none,
+                      title: 'Notifications',
+                      onTap: () => _open(context, const NotificationsPage()),
+                    ),
+                    _MenuRow(
+                      icon: Icons.settings_outlined,
+                      title: 'Account settings',
+                      onTap: () => _open(context, const AccountSettingsPage()),
+                    ),
+                    _MenuRow(
+                      icon: Icons.help_outline,
+                      title: 'Help & campus guidelines',
+                      onTap: () => _showHelp(context),
+                      isLast: true,
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 20),
                 OutlinedButton(
-                  style: OutlinedButton.styleFrom(foregroundColor: AppColors.error),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                  ),
                   onPressed: () => AppSession.logout(context),
                   child: const Text('Log out'),
                 ),
@@ -177,7 +240,14 @@ class _Stat extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Text(value, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.primary)),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: AppColors.primary,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(label, style: const TextStyle(color: AppColors.textGrey)),
         ],
@@ -208,7 +278,13 @@ class _MenuRow extends StatelessWidget {
   final String? trailing;
   final VoidCallback onTap;
   final bool isLast;
-  const _MenuRow({required this.icon, required this.title, this.trailing, required this.onTap, this.isLast = false});
+  const _MenuRow({
+    required this.icon,
+    required this.title,
+    this.trailing,
+    required this.onTap,
+    this.isLast = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -218,14 +294,20 @@ class _MenuRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         decoration: BoxDecoration(
-          border: isLast ? null : const Border(bottom: BorderSide(color: AppColors.border)),
+          border: isLast
+              ? null
+              : const Border(bottom: BorderSide(color: AppColors.border)),
         ),
         child: Row(
           children: [
             Icon(icon, color: AppColors.primary),
             const SizedBox(width: 14),
             Expanded(child: Text(title, style: const TextStyle(fontSize: 17))),
-            if (trailing != null) Text(trailing!, style: const TextStyle(color: AppColors.textGrey)),
+            if (trailing != null)
+              Text(
+                trailing!,
+                style: const TextStyle(color: AppColors.textGrey),
+              ),
             const SizedBox(width: 6),
             const Icon(Icons.chevron_right, color: AppColors.textGrey),
           ],
@@ -248,22 +330,51 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _name;
+  late final TextEditingController _uid;
+  late final TextEditingController _email;
+  final TextEditingController _address = TextEditingController();
+  final TextEditingController _mobile = TextEditingController();
+  String _gender = 'Not specified';
   String? _newAvatarPath;
 
   @override
   void initState() {
     super.initState();
-    _name = TextEditingController(text: context.read<AuthController>().user?.fullName ?? '');
+    final user = context.read<AuthController>().user;
+    _name = TextEditingController(text: user?.fullName ?? '');
+    _uid = TextEditingController(
+      text: user == null ? '' : 'BC-${user.id.toString().padLeft(6, '0')}',
+    );
+    _email = TextEditingController(text: user?.email ?? '');
+    _loadExtraDetails();
   }
 
   @override
   void dispose() {
     _name.dispose();
+    _uid.dispose();
+    _email.dispose();
+    _address.dispose();
+    _mobile.dispose();
     super.dispose();
   }
 
+  Future<void> _loadExtraDetails() async {
+    final preferences = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _address.text = preferences.getString('profile_address') ?? '';
+      _mobile.text = preferences.getString('profile_mobile') ?? '';
+      _gender = preferences.getString('profile_gender') ?? 'Not specified';
+    });
+  }
+
   Future<void> _pick() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 80, maxWidth: 800);
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+      maxWidth: 800,
+    );
     if (picked != null) setState(() => _newAvatarPath = picked.path);
   }
 
@@ -273,10 +384,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final ok = await auth.updateProfile(_name.text, avatarPath: _newAvatarPath);
     if (!mounted) return;
     if (ok) {
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setString('profile_address', _address.text.trim());
+      await preferences.setString('profile_mobile', _mobile.text.trim());
+      await preferences.setString('profile_gender', _gender);
+      if (!mounted) return;
       Navigator.pop(context);
       showSnack(context, 'Profile updated');
     } else {
-      showSnack(context, auth.error ?? 'Could not update profile', isError: true);
+      showSnack(
+        context,
+        auth.error ?? 'Could not update profile',
+        isError: true,
+      );
     }
   }
 
@@ -301,14 +421,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         onTap: _pick,
                         child: Stack(
                           children: [
-                            UserAvatar(name: user?.fullName ?? '', avatar: user?.avatar, radius: 60),
+                            UserAvatar(
+                              name: user?.fullName ?? '',
+                              avatar: user?.avatar,
+                              radius: 60,
+                            ),
                             Positioned(
                               right: 0,
                               bottom: 0,
                               child: Container(
                                 padding: const EdgeInsets.all(8),
-                                decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                                child: const Icon(Icons.photo_camera_outlined, color: Colors.white, size: 20),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.photo_camera_outlined,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                               ),
                             ),
                           ],
@@ -316,7 +447,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _newAvatarPath == null ? 'Tap to change your photo' : 'New photo selected',
+                        _newAvatarPath == null
+                            ? 'Tap to change your photo'
+                            : 'New photo selected',
                         style: const TextStyle(color: AppColors.textGrey),
                       ),
                       const SizedBox(height: 24),
@@ -328,10 +461,71 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         validator: Validators.fullName,
                       ),
                       const SizedBox(height: 16),
-                      Align(
+                      AppTextField(
+                        controller: _uid,
+                        label: 'UID',
+                        readOnly: true,
+                        suffixIcon: Icons.lock_outline,
+                      ),
+                      const SizedBox(height: 16),
+                      const Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('Email: ${user?.email ?? ''} (cannot be changed)',
-                            style: const TextStyle(color: AppColors.textGrey)),
+                        child: Text(
+                          'Gender',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      RadioGroup<String>(
+                        groupValue: _gender,
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => _gender = value);
+                          }
+                        },
+                        child: Row(
+                          children: ['Male', 'Female', 'Other'].map((gender) {
+                            return Expanded(
+                              child: RadioListTile<String>(
+                                contentPadding: EdgeInsets.zero,
+                                dense: true,
+                                title: Text(gender),
+                                value: gender,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      AppTextField(
+                        controller: _email,
+                        label: 'Email',
+                        readOnly: true,
+                        suffixIcon: Icons.lock_outline,
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      const SizedBox(height: 16),
+                      AppTextField(
+                        controller: _address,
+                        label: 'Address',
+                        hint: 'Your address',
+                        maxLines: 3,
+                        maxLength: 200,
+                        validator: (value) => Validators.maxLength(value, 200),
+                      ),
+                      const SizedBox(height: 16),
+                      AppTextField(
+                        controller: _mobile,
+                        label: 'Mobile no',
+                        hint: 'Your mobile number',
+                        suffixIcon: Icons.phone_outlined,
+                        keyboardType: TextInputType.phone,
+                        maxLength: 15,
+                        validator: Validators.mobile,
                       ),
                     ],
                   ),
@@ -340,7 +534,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-              child: PrimaryButton(text: 'Save changes', isLoading: auth.isLoading, onPressed: _save),
+              child: PrimaryButton(
+                text: 'Save changes',
+                isLoading: auth.isLoading,
+                onPressed: _save,
+              ),
             ),
           ],
         ),
@@ -371,13 +569,15 @@ class HistoryPage extends StatelessWidget {
                   ? const EmptyState(
                       icon: Icons.history,
                       title: 'Nothing here yet',
-                      message: 'Items you borrowed and returned will show up here.',
+                      message:
+                          'Items you borrowed and returned will show up here.',
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                       itemCount: list.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 14),
-                      itemBuilder: (context, i) => LoanCard(loan: list[i], myId: me),
+                      separatorBuilder: (_, _) => const SizedBox(height: 14),
+                      itemBuilder: (context, i) =>
+                          LoanCard(loan: list[i], myId: me),
                     ),
             ),
           ],

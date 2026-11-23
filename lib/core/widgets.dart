@@ -9,7 +9,7 @@ import 'package:borrowcircle/model/item_model.dart';
 //  If you want to change how buttons / tags / cards look, change them here.
 // =====================================================================
 
-/// App logo. Put your logo at assets/images/logo.png (see notes) - until then an icon is shown.
+/// App logo used throughout the application.
 class AppLogo extends StatelessWidget {
   final double size;
   const AppLogo({super.key, this.size = 72});
@@ -17,7 +17,7 @@ class AppLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Image.asset(
-      'assets/images/logo.png',
+      'assets/images/logo.jpeg',
       width: size,
       height: size,
       errorBuilder: (_, __, ___) => Container(
@@ -27,7 +27,11 @@ class AppLogo extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: AppColors.primary, width: size * 0.09),
         ),
-        child: Icon(Icons.swap_horiz_rounded, color: AppColors.secondary, size: size * 0.5),
+        child: Icon(
+          Icons.swap_horiz_rounded,
+          color: AppColors.secondary,
+          size: size * 0.5,
+        ),
       ),
     );
   }
@@ -45,6 +49,7 @@ class AppTextField extends StatefulWidget {
   final int maxLines;
   final int? maxLength;
   final ValueChanged<String>? onChanged;
+  final bool readOnly;
 
   const AppTextField({
     super.key,
@@ -58,6 +63,7 @@ class AppTextField extends StatefulWidget {
     this.maxLines = 1,
     this.maxLength,
     this.onChanged,
+    this.readOnly = false,
   });
 
   @override
@@ -72,11 +78,18 @@ class _AppTextFieldState extends State<AppTextField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(widget.label,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.textDark)),
+        Text(
+          widget.label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: AppColors.textDark,
+          ),
+        ),
         const SizedBox(height: 8),
         TextFormField(
           controller: widget.controller,
+          readOnly: widget.readOnly,
           obscureText: widget.isPassword && _hidden,
           keyboardType: widget.keyboardType,
           validator: widget.validator,
@@ -88,11 +101,17 @@ class _AppTextFieldState extends State<AppTextField> {
             counterText: '',
             suffixIcon: widget.isPassword
                 ? IconButton(
-                    icon: Icon(_hidden ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        color: AppColors.textGrey),
+                    icon: Icon(
+                      _hidden
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: AppColors.textGrey,
+                    ),
                     onPressed: () => setState(() => _hidden = !_hidden),
                   )
-                : (widget.suffixIcon == null ? null : Icon(widget.suffixIcon, color: AppColors.textGrey)),
+                : (widget.suffixIcon == null
+                      ? null
+                      : Icon(widget.suffixIcon, color: AppColors.textGrey)),
           ),
         ),
       ],
@@ -123,12 +142,18 @@ class PrimaryButton extends StatelessWidget {
           ? const SizedBox(
               height: 22,
               width: 22,
-              child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: Colors.white,
+              ),
             )
           : Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (icon != null) ...[Icon(icon, size: 20), const SizedBox(width: 10)],
+                if (icon != null) ...[
+                  Icon(icon, size: 20),
+                  const SizedBox(width: 10),
+                ],
                 Flexible(child: Text(text, overflow: TextOverflow.ellipsis)),
               ],
             ),
@@ -176,7 +201,12 @@ class ScreenHeader extends StatelessWidget {
   final bool showBack;
   final Widget? trailing;
 
-  const ScreenHeader({super.key, required this.title, this.showBack = true, this.trailing});
+  const ScreenHeader({
+    super.key,
+    required this.title,
+    this.showBack = true,
+    this.trailing,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +220,11 @@ class ScreenHeader extends StatelessWidget {
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textDark),
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+              ),
             ),
           ),
           if (trailing != null) trailing!,
@@ -243,12 +277,25 @@ class PillTag extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[Icon(icon, size: 16, color: fg), const SizedBox(width: 5)],
-          Text(text, style: TextStyle(color: fg, fontWeight: FontWeight.w600, fontSize: 13)),
+          if (icon != null) ...[
+            Icon(icon, size: 16, color: fg),
+            const SizedBox(width: 5),
+          ],
+          Text(
+            text,
+            style: TextStyle(
+              color: fg,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );
@@ -264,7 +311,11 @@ class StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = AppColors.statusColors(status);
-    return PillTag(text: textOverride ?? AppStatic.pretty(status), bg: bg, fg: fg);
+    return PillTag(
+      text: textOverride ?? AppStatic.pretty(status),
+      bg: bg,
+      fg: fg,
+    );
   }
 }
 
@@ -276,14 +327,25 @@ class NetImage extends StatelessWidget {
   final double radius;
   final BoxFit fit;
 
-  const NetImage({super.key, required this.url, this.width, this.height, this.radius = 14, this.fit = BoxFit.cover});
+  const NetImage({
+    super.key,
+    required this.url,
+    this.width,
+    this.height,
+    this.radius = 14,
+    this.fit = BoxFit.cover,
+  });
 
   Widget _placeholder() => Container(
-        width: width,
-        height: height,
-        color: AppColors.primaryLight,
-        child: const Icon(Icons.image_outlined, color: AppColors.primaryLightActive, size: 36),
-      );
+    width: width,
+    height: height,
+    color: AppColors.primaryLight,
+    child: const Icon(
+      Icons.image_outlined,
+      color: AppColors.primaryLightActive,
+      size: 36,
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -297,7 +359,8 @@ class NetImage extends StatelessWidget {
               height: height,
               fit: fit,
               errorBuilder: (_, __, ___) => _placeholder(),
-              loadingBuilder: (context, child, progress) => progress == null ? child : _placeholder(),
+              loadingBuilder: (context, child, progress) =>
+                  progress == null ? child : _placeholder(),
             ),
     );
   }
@@ -308,7 +371,12 @@ class UserAvatar extends StatelessWidget {
   final String name;
   final String? avatar;
   final double radius;
-  const UserAvatar({super.key, required this.name, this.avatar, this.radius = 26});
+  const UserAvatar({
+    super.key,
+    required this.name,
+    this.avatar,
+    this.radius = 26,
+  });
 
   static String initialsOf(String name) {
     final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
@@ -324,8 +392,14 @@ class UserAvatar extends StatelessWidget {
       backgroundColor: AppColors.primaryLightActive.withValues(alpha: 0.6),
       backgroundImage: url == null ? null : NetworkImage(url),
       child: url == null
-          ? Text(initialsOf(name),
-              style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w800, fontSize: radius * 0.7))
+          ? Text(
+              initialsOf(name),
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w800,
+                fontSize: radius * 0.7,
+              ),
+            )
           : null,
     );
   }
@@ -337,13 +411,21 @@ class SegmentedTabs extends StatelessWidget {
   final int selected;
   final ValueChanged<int> onChanged;
 
-  const SegmentedTabs({super.key, required this.labels, required this.selected, required this.onChanged});
+  const SegmentedTabs({
+    super.key,
+    required this.labels,
+    required this.selected,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(18)),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+      ),
       child: Row(
         children: [
           for (var i = 0; i < labels.length; i++)
@@ -363,7 +445,9 @@ class SegmentedTabs extends StatelessWidget {
                     labels[i],
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: i == selected ? AppColors.primary : AppColors.textGrey,
+                      color: i == selected
+                          ? AppColors.primary
+                          : AppColors.textGrey,
                     ),
                   ),
                 ),
@@ -380,21 +464,38 @@ class SectionHeader extends StatelessWidget {
   final String title;
   final String? actionText;
   final VoidCallback? onAction;
-  const SectionHeader({super.key, required this.title, this.actionText, this.onAction});
+  const SectionHeader({
+    super.key,
+    required this.title,
+    this.actionText,
+    this.onAction,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         Expanded(
-          child: Text(title,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textDark,
+            ),
+          ),
         ),
         if (actionText != null)
           GestureDetector(
             onTap: onAction,
-            child: Text(actionText!,
-                style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 15)),
+            child: Text(
+              actionText!,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
+            ),
           ),
       ],
     );
@@ -419,13 +520,21 @@ class InfoBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: fg),
           const SizedBox(width: 12),
-          Expanded(child: Text(text, style: TextStyle(color: fg, fontSize: 15, height: 1.35))),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(color: fg, fontSize: 15, height: 1.35),
+            ),
+          ),
         ],
       ),
     );
@@ -438,7 +547,13 @@ class EmptyState extends StatelessWidget {
   final String title;
   final String message;
   final Widget? action;
-  const EmptyState({super.key, required this.icon, required this.title, required this.message, this.action});
+  const EmptyState({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.action,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -451,15 +566,28 @@ class EmptyState extends StatelessWidget {
             Container(
               height: 80,
               width: 80,
-              decoration: const BoxDecoration(color: AppColors.primaryLight, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: AppColors.primaryLight,
+                shape: BoxShape.circle,
+              ),
               child: Icon(icon, color: AppColors.primary, size: 36),
             ),
             const SizedBox(height: 16),
-            Text(title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+              ),
+            ),
             const SizedBox(height: 6),
-            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textGrey)),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textGrey),
+            ),
             if (action != null) ...[const SizedBox(height: 16), action!],
           ],
         ),
@@ -482,7 +610,10 @@ class ErrorState extends StatelessWidget {
       message: message,
       action: SizedBox(
         width: 160,
-        child: OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
+        child: OutlinedButton(
+          onPressed: onRetry,
+          child: const Text('Try again'),
+        ),
       ),
     );
   }
@@ -493,7 +624,12 @@ class StarRating extends StatelessWidget {
   final int rating;
   final double size;
   final ValueChanged<int>? onChanged;
-  const StarRating({super.key, required this.rating, this.size = 28, this.onChanged});
+  const StarRating({
+    super.key,
+    required this.rating,
+    this.size = 28,
+    this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -508,7 +644,9 @@ class StarRating extends StatelessWidget {
               child: Icon(
                 i <= rating ? Icons.star_rounded : Icons.star_outline_rounded,
                 size: size,
-                color: i <= rating ? AppColors.primary : AppColors.primaryLightActive,
+                color: i <= rating
+                    ? AppColors.primary
+                    : AppColors.primaryLightActive,
               ),
             ),
           ),
@@ -538,25 +676,44 @@ class ItemCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            NetImage(url: AppStatic.imageUrl(item.imageUrl), height: 125, width: double.infinity, radius: 14),
+            NetImage(
+              url: AppStatic.imageUrl(item.imageUrl),
+              height: 125,
+              width: double.infinity,
+              radius: 14,
+            ),
             const SizedBox(height: 10),
             PillTag(
               text: item.isGroupItem ? 'Group item' : 'Peer item',
-              icon: item.isGroupItem ? Icons.groups_outlined : Icons.person_outline,
+              icon: item.isGroupItem
+                  ? Icons.groups_outlined
+                  : Icons.person_outline,
             ),
             const SizedBox(height: 8),
-            Text(item.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+            Text(
+              item.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+              ),
+            ),
             const SizedBox(height: 3),
-            Text('$who \u00b7 ${item.isAvailable ? 'Available' : 'On loan'}',
-                maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textGrey)),
+            Text(
+              '$who \u00b7 ${item.isAvailable ? 'Available' : 'On loan'}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: AppColors.textGrey),
+            ),
             const SizedBox(height: 3),
-            Text(item.category ?? 'Other',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: AppColors.textGrey, fontSize: 13)),
+            Text(
+              item.category ?? 'Other',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: AppColors.textGrey, fontSize: 13),
+            ),
           ],
         ),
       ),

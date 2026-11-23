@@ -12,6 +12,7 @@ import 'package:borrowcircle/model/loan_model.dart';
 import 'package:borrowcircle/pages/handover.dart';
 import 'package:borrowcircle/pages/return_item.dart';
 import 'package:borrowcircle/pages/review.dart';
+import 'package:borrowcircle/services/receipt_export_service.dart';
 
 /// "Active loans" tab.
 class LoansPage extends StatefulWidget {
@@ -36,7 +37,9 @@ class _LoansPageState extends State<LoansPage> {
 
     final borrowing = ctrl.activeBorrowing;
     final lending = ctrl.activeLending;
-    final active = _tab == 0 ? [...borrowing, ...lending] : (_tab == 1 ? borrowing : lending);
+    final active = _tab == 0
+        ? [...borrowing, ...lending]
+        : (_tab == 1 ? borrowing : lending);
     final completed = _tab == 0
         ? [...ctrl.completedBorrowing, ...ctrl.completedLending]
         : (_tab == 1 ? ctrl.completedBorrowing : ctrl.completedLending);
@@ -46,63 +49,78 @@ class _LoansPageState extends State<LoansPage> {
         children: [
           const ScreenHeader(title: 'Active loans', showBack: false),
           Expanded(
-            child: ctrl.isLoading && ctrl.borrowing.isEmpty && ctrl.lending.isEmpty
+            child:
+                ctrl.isLoading && ctrl.borrowing.isEmpty && ctrl.lending.isEmpty
                 ? const Center(child: CircularProgressIndicator())
-                : ctrl.error != null && ctrl.borrowing.isEmpty && ctrl.lending.isEmpty
-                    ? ErrorState(message: ctrl.error!, onRetry: ctrl.load)
-                    : RefreshIndicator(
-                        onRefresh: _refresh,
-                        child: ListView(
-                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                          physics: const AlwaysScrollableScrollPhysics(),
+                : ctrl.error != null &&
+                      ctrl.borrowing.isEmpty &&
+                      ctrl.lending.isEmpty
+                ? ErrorState(message: ctrl.error!, onRetry: ctrl.load)
+                : RefreshIndicator(
+                    onRefresh: _refresh,
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        Row(
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                    child: _SummaryCard(
-                                        label: 'Borrowing',
-                                        count: borrowing.length,
-                                        sub: 'Items you hold')),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                    child: _SummaryCard(
-                                        label: 'Lending', count: lending.length, sub: 'Items you lent out')),
-                              ],
+                            Expanded(
+                              child: _SummaryCard(
+                                label: 'Borrowing',
+                                count: borrowing.length,
+                                sub: 'Items you hold',
+                              ),
                             ),
-                            const SizedBox(height: 16),
-                            SegmentedTabs(
-                              labels: const ['All active', 'Borrowing', 'Lending'],
-                              selected: _tab,
-                              onChanged: (i) => setState(() => _tab = i),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _SummaryCard(
+                                label: 'Lending',
+                                count: lending.length,
+                                sub: 'Items you lent out',
+                              ),
                             ),
-                            const SizedBox(height: 16),
-                            if (active.isEmpty)
-                              const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 30),
-                                child: EmptyState(
-                                  icon: Icons.repeat,
-                                  title: 'No active loans',
-                                  message: 'Approved requests turn into loans after the handover.',
-                                ),
-                              )
-                            else
-                              for (final loan in active) ...[
-                                LoanCard(loan: loan, myId: me),
-                                const SizedBox(height: 14),
-                              ],
-                            if (completed.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              const Text('Completed',
-                                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textDark)),
-                              const SizedBox(height: 12),
-                              for (final loan in completed) ...[
-                                LoanCard(loan: loan, myId: me),
-                                const SizedBox(height: 14),
-                              ],
-                            ],
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        SegmentedTabs(
+                          labels: const ['All active', 'Borrowing', 'Lending'],
+                          selected: _tab,
+                          onChanged: (i) => setState(() => _tab = i),
+                        ),
+                        const SizedBox(height: 16),
+                        if (active.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 30),
+                            child: EmptyState(
+                              icon: Icons.repeat,
+                              title: 'No active loans',
+                              message: 'Approved requests turn into loans after the handover.',
+                            ),
+                          )
+                        else
+                          for (final loan in active) ...[
+                            LoanCard(loan: loan, myId: me),
+                            const SizedBox(height: 14),
+                          ],
+                        if (completed.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Completed',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          for (final loan in completed) ...[
+                            LoanCard(loan: loan, myId: me),
+                            const SizedBox(height: 14),
+                          ],
+                        ],
+                      ],
+                    ),
+                  ),
           ),
         ],
       ),
@@ -114,20 +132,36 @@ class _SummaryCard extends StatelessWidget {
   final String label;
   final int count;
   final String sub;
-  const _SummaryCard({required this.label, required this.count, required this.sub});
+  const _SummaryCard({
+    required this.label,
+    required this.count,
+    required this.sub,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(22),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.primary, fontSize: 16)),
+          Text(
+            label,
+            style: const TextStyle(color: AppColors.primary, fontSize: 16),
+          ),
           const SizedBox(height: 4),
-          Text(count.toString().padLeft(2, '0'),
-              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+          Text(
+            count.toString().padLeft(2, '0'),
+            style: const TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textDark,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(sub, style: const TextStyle(color: AppColors.textGrey)),
         ],
@@ -155,7 +189,12 @@ class LoanCard extends StatelessWidget {
         return ('returned', 'Returned');
       default:
         final left = Fmt.daysLeft(loan.endDate);
-        return ('on_loan', left <= 0 ? 'Due today' : (left == 1 ? '1 day left' : '$left days left'));
+        return (
+          'on_loan',
+          left <= 0
+              ? 'Due today'
+              : (left == 1 ? '1 day left' : '$left days left'),
+        );
     }
   }
 
@@ -171,11 +210,41 @@ class LoanCard extends StatelessWidget {
   void _open(BuildContext context, Widget page) =>
       Navigator.push(context, MaterialPageRoute(builder: (_) => page));
 
+  Future<void> _showReceipt(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Digital return certificate'),
+        content: SingleChildScrollView(
+          child: Text(
+            ReceiptExportService.receiptText(loan),
+            style: const TextStyle(height: 1.5),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await ReceiptExportService.copy(loan);
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('Copy receipt'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final (chipStatus, chipText) = _chip;
     final other = _iAmOwner ? loan.borrowerName : loan.ownerName;
-    final reviewed = context.watch<ReviewController>().reviewedLoanIds.contains(loan.id);
+    final reviewed = context.watch<ReviewController>().reviewedLoanIds.contains(
+      loan.id,
+    );
 
     Widget? action;
     if (loan.awaitingHandover) {
@@ -196,9 +265,49 @@ class LoanCard extends StatelessWidget {
               child: const Text('How to return'),
             );
     } else if (loan.isReturned && !reviewed) {
-      action = OutlinedButton(
-        onPressed: () => _open(context, ReviewPage(loan: loan)),
-        child: const Text('Leave a review'),
+      action = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          OutlinedButton(
+            onPressed: () => _open(context, ReviewPage(loan: loan)),
+            child: const Text('Leave a review'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () {
+              Navigator.popUntil(context, (route) => route.isFirst);
+              AppNav.tabIndex.value = 0;
+            },
+            icon: const Icon(Icons.replay),
+            label: const Text('Borrow again'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () => _showReceipt(context),
+            icon: const Icon(Icons.receipt_long_outlined),
+            label: const Text('View return receipt'),
+          ),
+        ],
+      );
+    } else if (loan.isReturned) {
+      action = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          OutlinedButton.icon(
+            onPressed: () {
+              Navigator.popUntil(context, (route) => route.isFirst);
+              AppNav.tabIndex.value = 0;
+            },
+            icon: const Icon(Icons.replay),
+            label: const Text('Borrow again'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () => _showReceipt(context),
+            icon: const Icon(Icons.receipt_long_outlined),
+            label: const Text('View return receipt'),
+          ),
+        ],
       );
     }
 
@@ -220,24 +329,43 @@ class LoanCard extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              NetImage(url: AppStatic.imageUrl(loan.itemImage), width: 84, height: 84, radius: 16),
+              NetImage(
+                url: AppStatic.imageUrl(loan.itemImage),
+                width: 84,
+                height: 84,
+                radius: 16,
+              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(loan.itemTitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                    Text(
+                      loan.itemTitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textDark,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.person_outline, color: AppColors.primary, size: 18),
+                        const Icon(
+                          Icons.person_outline,
+                          color: AppColors.primary,
+                          size: 18,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
-                          child: Text(other,
-                              maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textGrey)),
+                          child: Text(
+                            other,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: AppColors.textGrey),
+                          ),
                         ),
                       ],
                     ),
@@ -263,8 +391,10 @@ class LoanCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text('Return by ${Fmt.dayWithWeekday(loan.endDate)}',
-                style: const TextStyle(color: AppColors.textGrey)),
+            Text(
+              'Return by ${Fmt.dayWithWeekday(loan.endDate)}',
+              style: const TextStyle(color: AppColors.textGrey),
+            ),
           ],
           if (action != null) ...[const SizedBox(height: 14), action],
         ],

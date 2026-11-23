@@ -12,6 +12,7 @@ import 'package:borrowcircle/controller/notification_controller.dart';
 import 'package:borrowcircle/controller/password_controller.dart';
 import 'package:borrowcircle/controller/request_controller.dart';
 import 'package:borrowcircle/controller/review_controller.dart';
+import 'package:borrowcircle/core/colors.dart';
 import 'package:borrowcircle/core/theme.dart';
 import 'package:borrowcircle/pages/splash_page.dart';
 
@@ -39,11 +40,26 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ReviewController()),
         ChangeNotifierProvider(create: (_) => GroupController()),
       ],
-      child: MaterialApp(
-        title: 'BorrowCircle',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        home: const SplashPage(),
+      child: Consumer<AccountController>(
+        builder: (context, account, _) => MaterialApp(
+          title: 'BorrowCircle',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: AppColors.primary,
+              brightness: Brightness.dark,
+            ),
+          ),
+          themeMode: account.themeMode == 'light'
+              ? ThemeMode.light
+              : account.themeMode == 'dark'
+              ? ThemeMode.dark
+              : ThemeMode.system,
+          home: const SplashPage(),
+        ),
       ),
     );
   }

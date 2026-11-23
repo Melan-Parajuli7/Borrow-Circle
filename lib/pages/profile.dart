@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:borrowcircle/controller/apicall.dart';
@@ -10,9 +11,11 @@ import 'package:borrowcircle/controller/item_controller.dart';
 import 'package:borrowcircle/controller/loan_controller.dart';
 import 'package:borrowcircle/controller/review_controller.dart';
 import 'package:borrowcircle/core/colors.dart';
+import 'package:borrowcircle/core/format.dart';
 import 'package:borrowcircle/core/static.dart';
 import 'package:borrowcircle/core/validators.dart';
 import 'package:borrowcircle/core/widgets.dart';
+import 'package:borrowcircle/model/user_model.dart';
 import 'package:borrowcircle/pages/account.dart';
 import 'package:borrowcircle/pages/groups.dart';
 import 'package:borrowcircle/pages/calendar.dart';
@@ -28,17 +31,76 @@ class ProfilePage extends StatelessWidget {
   void _open(BuildContext context, Widget page) =>
       Navigator.push(context, MaterialPageRoute(builder: (_) => page));
 
+  void _showQrPass(BuildContext context, UserModel user) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('My QR pass'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            QrImageView(
+              data: 'BORROWCIRCLE:USER:${user.id}:${user.fullName}',
+              size: 220,
+              backgroundColor: Colors.white,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              user.fullName,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showHelp(BuildContext context) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Help & campus guidelines'),
-        content: const Text(
-          '\u2022 Only verified university emails can join.\n'
-          '\u2022 You can borrow an item for up to ${AppStatic.maxBorrowDays} days.\n'
-          '\u2022 The borrower shows a 6-digit code, the owner enters it to start the loan.\n'
-          '\u2022 The owner confirms the return, then both can leave a review.\n'
-          '\u2022 Return items in the same condition.',
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                _GuidelineTile(
+                  icon: Icons.verified_user_outlined,
+                  title: 'Verified campus community',
+                  text: 'Use a verified university email to join and lend responsibly.',
+                ),
+                _GuidelineTile(
+                  icon: Icons.calendar_month_outlined,
+                  title: 'Borrowing window',
+                  text:
+                      'You can borrow an item for up to ${AppStatic.maxBorrowDays} days.',
+                ),
+                _GuidelineTile(
+                  icon: Icons.qr_code_2,
+                  title: 'Secure handover',
+                  text: 'The borrower shows the 6-digit code or QR; the owner confirms it.',
+                ),
+                _GuidelineTile(
+                  icon: Icons.assignment_turned_in_outlined,
+                  title: 'Return and review',
+                  text: 'The owner confirms the return, then both members can leave a review.',
+                ),
+                _GuidelineTile(
+                  icon: Icons.cleaning_services_outlined,
+                  title: 'Care for shared items',
+                  text: 'Return equipment clean, complete, and in the same condition.',
+                ),
+              ],
+            ),
+          ),
         ),
         actions: [
           TextButton(
@@ -64,6 +126,14 @@ class ProfilePage extends StatelessWidget {
     final rating = reviews.summary.total == 0
         ? '\u2014'
         : '${reviews.summary.average.toStringAsFixed(1)} \u2605';
+    final completedCount = loans.completedCount;
+    final trustTier = completedCount >= 20
+        ? 'Tier 3 Trusted Campus Lender'
+        : completedCount >= 5
+        ? 'Tier 2 Campus Lender'
+        : 'Tier 1 Campus Member';
+    final recentLoans = [...loans.activeBorrowing, ...loans.completedBorrowing]
+      ..sort((a, b) => b.endDate.compareTo(a.endDate));
 
     return SafeArea(
       child: Column(
@@ -153,6 +223,102 @@ class ProfilePage extends StatelessWidget {
                     ],
                   ),
                 ),
+                const SizedBox(height: 24),
+                AppCard(
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.verified,
+                        color: AppColors.primary,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              trustTier,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              '$completedCount verified completed loans',
+                              style: const TextStyle(color: AppColors.textGrey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                AppCard(
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: _ImpactStat(
+                          icon: Icons.eco_outlined,
+                          value: '0.0 kg',
+                          label: 'CO2 estimated saved',
+                        ),
+                      ),
+                      Container(width: 1, height: 52, color: AppColors.border),
+                      Expanded(
+                        child: _ImpactStat(
+                          icon: Icons.savings_outlined,
+                          value: '${completedCount * 250} NPR',
+                          label: 'Estimated saved',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                AppCard(
+                  onTap: () => _showQrPass(context, user),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.qr_code_2, color: AppColors.primary),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'My QR Pass',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      Icon(Icons.chevron_right, color: AppColors.textGrey),
+                    ],
+                  ),
+                ),
+                if (recentLoans.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  AppCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Recent activity',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${recentLoans.first.itemTitle} \u00b7 ${recentLoans.first.isReturned ? 'Returned' : 'Borrowed'}',
+                          style: const TextStyle(color: AppColors.textGrey),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 24),
 
                 const Text(
@@ -250,6 +416,81 @@ class _Stat extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(label, style: const TextStyle(color: AppColors.textGrey)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImpactStat extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+
+  const _ImpactStat({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Column(
+        children: [
+          Icon(icon, color: AppColors.primary),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.textGrey, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GuidelineTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String text;
+
+  const _GuidelineTile({
+    required this.icon,
+    required this.title,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: AppColors.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 3),
+                Text(text, style: const TextStyle(color: AppColors.textGrey)),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -550,14 +791,38 @@ class _EditProfilePageState extends State<EditProfilePage> {
 // =====================================================================
 //  BORROWING HISTORY
 // =====================================================================
-class HistoryPage extends StatelessWidget {
+class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
+
+  @override
+  State<HistoryPage> createState() => _HistoryPageState();
+}
+
+class _HistoryPageState extends State<HistoryPage> {
+  int _role = 0;
+  int _year = 0;
 
   @override
   Widget build(BuildContext context) {
     final loans = context.watch<LoanController>();
     final me = context.watch<AuthController>().user?.id ?? 0;
-    final list = loans.completedBorrowing;
+    var list = [...loans.completedBorrowing, ...loans.completedLending];
+    if (_role == 1) list = list.where((l) => l.borrowerId == me).toList();
+    if (_role == 2) list = list.where((l) => l.ownerId == me).toList();
+    if (_year != 0) {
+      list = list.where((l) {
+        final date = Fmt.parseDay(l.endDate);
+        return date != null && date.year == _year;
+      }).toList();
+    }
+    list.sort((a, b) => b.endDate.compareTo(a.endDate));
+    final years =
+        list
+            .map((l) => Fmt.parseDay(l.endDate)?.year)
+            .whereType<int>()
+            .toSet()
+            .toList()
+          ..sort((a, b) => b.compareTo(a));
 
     return Scaffold(
       body: SafeArea(
@@ -565,20 +830,63 @@ class HistoryPage extends StatelessWidget {
           children: [
             const ScreenHeader(title: 'Borrowing history'),
             Expanded(
-              child: list.isEmpty
-                  ? const EmptyState(
-                      icon: Icons.history,
-                      title: 'Nothing here yet',
-                      message:
-                          'Items you borrowed and returned will show up here.',
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                      itemCount: list.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 14),
-                      itemBuilder: (context, i) =>
-                          LoanCard(loan: list[i], myId: me),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SegmentedTabs(
+                          labels: const ['All', 'Borrowed by me', 'Lent by me'],
+                          selected: _role,
+                          onChanged: (value) => setState(() => _role = value),
+                        ),
+                        const SizedBox(height: 10),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              ChoiceChip(
+                                label: const Text('All years'),
+                                selected: _year == 0,
+                                onSelected: (_) => setState(() => _year = 0),
+                              ),
+                              const SizedBox(width: 8),
+                              for (final year in years) ...[
+                                ChoiceChip(
+                                  label: Text('$year'),
+                                  selected: _year == year,
+                                  onSelected: (_) =>
+                                      setState(() => _year = year),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: list.isEmpty
+                        ? const EmptyState(
+                            icon: Icons.history,
+                            title: 'Nothing here yet',
+                            message: 'Items you borrowed and returned will show up here.',
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                            itemCount: list.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 14),
+                            itemBuilder: (context, i) =>
+                                LoanCard(loan: list[i], myId: me),
+                          ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

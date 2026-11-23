@@ -15,6 +15,70 @@ import 'package:borrowcircle/pages/profile.dart';
 class AccountSettingsPage extends StatelessWidget {
   const AccountSettingsPage({super.key});
 
+  static Future<void> _editHandoverSpot(
+    BuildContext context,
+    AccountController account,
+  ) async {
+    final controller = TextEditingController(text: account.handoverSpot);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Default handover spot'),
+        content: AppTextField(
+          controller: controller,
+          label: 'Campus location',
+          hint: 'e.g. Central Library North Desk',
+          maxLength: 120,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (result == null) return;
+    await account.setHandoverSpot(result);
+  }
+
+  static Future<void> _chooseTheme(
+    BuildContext context,
+    AccountController account,
+  ) async {
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: ['system', 'light', 'dark'].map((value) {
+            final label = '${value[0].toUpperCase()}${value.substring(1)}';
+            return ListTile(
+              leading: Icon(
+                value == 'system'
+                    ? Icons.phone_android
+                    : value == 'light'
+                    ? Icons.light_mode_outlined
+                    : Icons.dark_mode_outlined,
+              ),
+              title: Text(label),
+              trailing: account.themeMode == value
+                  ? const Icon(Icons.check, color: AppColors.primary)
+                  : null,
+              onTap: () => Navigator.pop(ctx, value),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+    if (result != null) await account.setThemeMode(result);
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
@@ -140,6 +204,59 @@ class AccountSettingsPage extends StatelessWidget {
                               : null,
                         ),
                         showChevron: false,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Preferences',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _SettingsCard(
+                    children: [
+                      _SettingsRow(
+                        icon: Icons.place_outlined,
+                        title: 'Default handover spot',
+                        subtitle: account.handoverSpot.isEmpty
+                            ? 'Not set'
+                            : account.handoverSpot,
+                        onTap: () => _editHandoverSpot(context, account),
+                      ),
+                      _SettingsRow(
+                        icon: Icons.palette_outlined,
+                        title: 'Appearance',
+                        subtitle:
+                            '${account.themeMode[0].toUpperCase()}${account.themeMode.substring(1)} theme',
+                        onTap: () => _chooseTheme(context, account),
+                      ),
+                      _SettingsRow(
+                        icon: Icons.image_outlined,
+                        title: 'Storage & cache',
+                        subtitle: 'Clear temporary item and profile images',
+                        onTap: () {
+                          PaintingBinding.instance.imageCache.clear();
+                          PaintingBinding.instance.imageCache.clearLiveImages();
+                          showSnack(context, 'Image cache cleared');
+                        },
+                        isLast: false,
+                      ),
+                      _SettingsRow(
+                        icon: Icons.visibility_off_outlined,
+                        title: 'Privacy',
+                        subtitle: account.hideContactInfo
+                            ? 'Contact hidden from non-circle members'
+                            : 'Contact visible to verified students',
+                        trailing: Switch.adaptive(
+                          value: account.hideContactInfo,
+                          onChanged: account.setHideContactInfo,
+                        ),
+                        showChevron: false,
+                        isLast: true,
                       ),
                     ],
                   ),
@@ -407,6 +524,7 @@ class _SettingsRow extends StatelessWidget {
   final Widget? trailing;
   final VoidCallback? onTap;
   final bool showChevron;
+  final bool isLast;
 
   const _SettingsRow({
     required this.icon,
@@ -415,6 +533,7 @@ class _SettingsRow extends StatelessWidget {
     this.trailing,
     this.onTap,
     this.showChevron = true,
+    this.isLast = false,
   });
 
   @override
@@ -422,8 +541,13 @@ class _SettingsRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(22),
-      child: Padding(
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          border: isLast
+              ? null
+              : const Border(bottom: BorderSide(color: AppColors.border)),
+        ),
         child: Row(
           children: [
             Icon(icon, color: AppColors.primary),
@@ -450,7 +574,7 @@ class _SettingsRow extends StatelessWidget {
                 ],
               ),
             ),
-            ?trailing,
+            if (trailing != null) trailing!,
             if (trailing == null && showChevron)
               const Icon(Icons.chevron_right, color: AppColors.textGrey),
           ],

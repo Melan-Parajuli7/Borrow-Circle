@@ -15,11 +15,17 @@ import 'package:borrowcircle/model/item_model.dart';
 /// "List a New Item" - also used to EDIT an item when [editItem] is given.
 class AddItemPage extends StatefulWidget {
   final ItemModel? editItem;
+  final ItemModel? duplicateItem;
 
   /// When coming from "Create group" on the groups screen.
   final String? presetGroupName;
 
-  const AddItemPage({super.key, this.editItem, this.presetGroupName});
+  const AddItemPage({
+    super.key,
+    this.editItem,
+    this.duplicateItem,
+    this.presetGroupName,
+  });
 
   @override
   State<AddItemPage> createState() => _AddItemPageState();
@@ -42,25 +48,30 @@ class _AddItemPageState extends State<AddItemPage> {
   Uint8List? _imageBytes; // preview of that photo
 
   bool get _isEdit => widget.editItem != null;
+  bool get _isDuplicate => widget.duplicateItem != null;
 
   @override
   void initState() {
     super.initState();
     final e = widget.editItem;
-    if (e != null) {
-      _title.text = e.title;
-      _description.text = e.description ?? '';
-      _isGroup = e.isGroupItem;
-      _groupChoice = e.groupName;
-      _category = e.category;
-      _condition = e.condition;
+    final d = widget.duplicateItem;
+    if (e != null || d != null) {
+      final source = e ?? d!;
+      _title.text = _isDuplicate ? '${source.title} - copy' : source.title;
+      _description.text = source.description ?? '';
+      _isGroup = source.isGroupItem;
+      _groupChoice = source.groupName;
+      _category = source.category;
+      _condition = source.condition;
     } else if (widget.presetGroupName != null) {
       _isGroup = true;
       _newGroupName.text = widget.presetGroupName!;
       _groupChoice = _newGroupValue;
     }
     // we need the list of existing groups for the dropdown
-    WidgetsBinding.instance.addPostFrameCallback((_) => context.read<GroupController>().load());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => context.read<GroupController>().load(),
+    );
   }
 
   @override
@@ -72,7 +83,11 @@ class _AddItemPageState extends State<AddItemPage> {
   }
 
   Future<void> _pickImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 80, maxWidth: 1600);
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+      maxWidth: 1600,
+    );
     if (picked == null) return;
     final bytes = await picked.readAsBytes();
     if (!mounted) return;
@@ -87,7 +102,9 @@ class _AddItemPageState extends State<AddItemPage> {
 
     String? groupName;
     if (_isGroup) {
-      groupName = _groupChoice == _newGroupValue ? _newGroupName.text.trim() : _groupChoice;
+      groupName = _groupChoice == _newGroupValue
+          ? _newGroupName.text.trim()
+          : _groupChoice;
       if (groupName == null || groupName.isEmpty) {
         showSnack(context, 'Please choose or create a group', isError: true);
         return;
@@ -125,20 +142,31 @@ class _AddItemPageState extends State<AddItemPage> {
       Navigator.pop(context);
       showSnack(context, _isEdit ? 'Item updated' : 'Item published!');
     } else {
-      showSnack(context, ctrl.actionError ?? 'Could not save the item', isError: true);
+      showSnack(
+        context,
+        ctrl.actionError ?? 'Could not save the item',
+        isError: true,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final saving = context.watch<ItemController>().isSaving;
-    final groupNames = context.watch<GroupController>().groups.map((g) => g.name).toList();
+    final groupNames = context
+        .watch<GroupController>()
+        .groups
+        .map((g) => g.name)
+        .toList();
     // keep the item's current group in the list when editing
-    if (_groupChoice != null && _groupChoice != _newGroupValue && !groupNames.contains(_groupChoice)) {
+    if (_groupChoice != null &&
+        _groupChoice != _newGroupValue &&
+        !groupNames.contains(_groupChoice)) {
       groupNames.add(_groupChoice!);
     }
     final categories = [...AppStatic.categories];
-    if (_category != null && !categories.contains(_category)) categories.add(_category!);
+    if (_category != null && !categories.contains(_category))
+      categories.add(_category!);
 
     return Scaffold(
       body: SafeArea(
@@ -153,8 +181,14 @@ class _AddItemPageState extends State<AddItemPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Who are you listing for?',
-                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                      const Text(
+                        'Who are you listing for?',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       Row(
                         children: [
@@ -183,15 +217,22 @@ class _AddItemPageState extends State<AddItemPage> {
                       // ---- group dropdown (only for group items) ----
                       if (_isGroup) ...[
                         const SizedBox(height: 18),
-                        const Text('List under group', style: TextStyle(fontWeight: FontWeight.w600)),
+                        const Text(
+                          'List under group',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
                         const SizedBox(height: 8),
                         DropdownButtonFormField<String>(
                           initialValue: _groupChoice,
                           isExpanded: true,
                           hint: const Text('Choose a group'),
                           items: [
-                            for (final n in groupNames) DropdownMenuItem(value: n, child: Text(n)),
-                            const DropdownMenuItem(value: _newGroupValue, child: Text('+ Create a new group')),
+                            for (final n in groupNames)
+                              DropdownMenuItem(value: n, child: Text(n)),
+                            const DropdownMenuItem(
+                              value: _newGroupValue,
+                              child: Text('+ Create a new group'),
+                            ),
                           ],
                           onChanged: (v) => setState(() => _groupChoice = v),
                         ),
@@ -214,15 +255,24 @@ class _AddItemPageState extends State<AddItemPage> {
                           if (_imageBytes != null)
                             ClipRRect(
                               borderRadius: BorderRadius.circular(16),
-                              child: Image.memory(_imageBytes!, width: 100, height: 100, fit: BoxFit.cover),
+                              child: Image.memory(
+                                _imageBytes!,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              ),
                             )
                           else if (_isEdit && widget.editItem!.imageUrl != null)
                             NetImage(
-                                url: AppStatic.imageUrl(widget.editItem!.imageUrl),
-                                width: 100,
-                                height: 100,
-                                radius: 16),
-                          if (_imageBytes != null || (_isEdit && widget.editItem!.imageUrl != null))
+                              url: AppStatic.imageUrl(
+                                widget.editItem!.imageUrl,
+                              ),
+                              width: 100,
+                              height: 100,
+                              radius: 16,
+                            ),
+                          if (_imageBytes != null ||
+                              (_isEdit && widget.editItem!.imageUrl != null))
                             const SizedBox(width: 12),
                           InkWell(
                             onTap: _pickImage,
@@ -232,9 +282,15 @@ class _AddItemPageState extends State<AddItemPage> {
                               width: 100,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: AppColors.primaryLightActive),
+                                border: Border.all(
+                                  color: AppColors.primaryLightActive,
+                                ),
                               ),
-                              child: const Icon(Icons.photo_camera_outlined, color: AppColors.primary, size: 32),
+                              child: const Icon(
+                                Icons.photo_camera_outlined,
+                                color: AppColors.primary,
+                                size: 32,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 14),
@@ -242,9 +298,18 @@ class _AddItemPageState extends State<AddItemPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Add photo', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                                Text(
+                                  'Add photo',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 16,
+                                  ),
+                                ),
                                 SizedBox(height: 4),
-                                Text('Show the item\u2019s condition.', style: TextStyle(color: AppColors.textGrey)),
+                                Text(
+                                  'Show the item\u2019s condition.',
+                                  style: TextStyle(color: AppColors.textGrey),
+                                ),
                               ],
                             ),
                           ),
@@ -268,14 +333,24 @@ class _AddItemPageState extends State<AddItemPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Category', style: TextStyle(fontWeight: FontWeight.w600)),
+                                const Text(
+                                  'Category',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<String>(
                                   initialValue: _category,
                                   isExpanded: true,
                                   hint: const Text('Select'),
-                                  items: [for (final c in categories) DropdownMenuItem(value: c, child: Text(c))],
-                                  onChanged: (v) => setState(() => _category = v),
+                                  items: [
+                                    for (final c in categories)
+                                      DropdownMenuItem(
+                                        value: c,
+                                        child: Text(c),
+                                      ),
+                                  ],
+                                  onChanged: (v) =>
+                                      setState(() => _category = v),
                                 ),
                               ],
                             ),
@@ -285,16 +360,23 @@ class _AddItemPageState extends State<AddItemPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Condition', style: TextStyle(fontWeight: FontWeight.w600)),
+                                const Text(
+                                  'Condition',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<String>(
                                   initialValue: _condition,
                                   isExpanded: true,
                                   items: [
                                     for (final c in AppStatic.conditions)
-                                      DropdownMenuItem(value: c, child: Text(AppStatic.pretty(c))),
+                                      DropdownMenuItem(
+                                        value: c,
+                                        child: Text(AppStatic.pretty(c)),
+                                      ),
                                   ],
-                                  onChanged: (v) => setState(() => _condition = v ?? 'good'),
+                                  onChanged: (v) =>
+                                      setState(() => _condition = v ?? 'good'),
                                 ),
                               ],
                             ),
@@ -324,7 +406,9 @@ class _AddItemPageState extends State<AddItemPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
               child: PrimaryButton(
-                text: _isEdit ? 'Save changes' : (_isGroup ? 'Publish Group Listing' : 'Publish Listing'),
+                text: _isEdit
+                    ? 'Save changes'
+                    : (_isGroup ? 'Publish Group Listing' : 'Publish Listing'),
                 icon: Icons.send_outlined,
                 isLoading: saving,
                 onPressed: _submit,
@@ -362,7 +446,10 @@ class _TypeCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? AppColors.primaryLight : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? AppColors.primary : AppColors.border, width: selected ? 1.5 : 1),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.border,
+            width: selected ? 1.5 : 1,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,13 +458,23 @@ class _TypeCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Icon(icon, color: AppColors.primary, size: 28),
-                Icon(selected ? Icons.check_circle_outline : Icons.circle_outlined,
-                    color: selected ? AppColors.primary : AppColors.primaryLightActive),
+                Icon(
+                  selected ? Icons.check_circle_outline : Icons.circle_outlined,
+                  color: selected
+                      ? AppColors.primary
+                      : AppColors.primaryLightActive,
+                ),
               ],
             ),
             const SizedBox(height: 10),
-            Text(title,
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+              ),
+            ),
             Text(subtitle, style: const TextStyle(color: AppColors.textGrey)),
           ],
         ),

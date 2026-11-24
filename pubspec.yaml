@@ -57,11 +57,11 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: false
-  image_path: "assets/icons/app_icon.jpeg"
+  image_path: "assets/icons/borrowcircle_icon.jpeg"
   min_sdk_android: 21
   web:
     generate: true
-    image_path: "assets/icons/app_icon.jpeg"
+    image_path: "assets/icons/borrowcircle_icon.jpeg"
     background_color: "#ffffff"
     theme_color: "#ffffff"
 
@@ -79,8 +79,8 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/logo.jpeg
-    - assets/icons/app_icon.jpeg
+    - assets/images/first_ui.jpg
+    - assets/icons/borrowcircle_icon.jpeg
 
   # To add assets to your application, add an assets section, like this:
   # assets:

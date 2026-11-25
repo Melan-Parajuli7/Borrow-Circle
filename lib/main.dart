@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -29,6 +31,7 @@ import 'package:borrowcircle/presentation/viewmodels/notification_viewmodel.dart
 import 'package:borrowcircle/presentation/viewmodels/password_viewmodel.dart';
 import 'package:borrowcircle/presentation/viewmodels/request_viewmodel.dart';
 import 'package:borrowcircle/presentation/viewmodels/review_viewmodel.dart';
+import 'package:borrowcircle/firebase_options.dart';
 
 /// Entry point of the BorrowCircle Flutter application.
 ///
@@ -37,8 +40,9 @@ import 'package:borrowcircle/presentation/viewmodels/review_viewmodel.dart';
 /// Steps:
 /// 1. Ensures Flutter bindings are initialized (required before using async
 ///    APIs that touch the framework).
-/// 2. Restores the persisted auth tokens from local storage.
-/// 3. Creates an [ApiClient] wrapping [http.Client] — the single networking
+ /// 2. Restores the persisted auth tokens from local storage.
+ /// 3. Initialises Firebase (Android only) for the Firestore chat feature.
+ /// 4. Creates an [ApiClient] wrapping [http.Client] — the single networking
 ///    entry point that attaches the session cookies and refreshes tokens.
 /// 4. Creates the repository implementations with that [ApiClient] injected.
 /// 5. Provides every [ViewModel] via [MultiProvider].
@@ -49,6 +53,14 @@ void main() async {
   // Tokens are persisted in SharedPreferences and restored before the first
   // request so the splash screen can restore an existing session.
   await TokenStorage.load();
+
+  // Firebase is required by the Firestore chat service. iOS and web are not
+  // configured in this build, so initialisation is skipped on those platforms.
+  if (DefaultFirebaseOptions.currentPlatform != null) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform!,
+    );
+  }
 
   // API client handles HTTP requests and automatically attaches the session
   // cookies. Every repository receives this same instance.

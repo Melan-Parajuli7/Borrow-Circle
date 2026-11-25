@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../screens/auth/auth_screen.dart';
+import '../screens/chat/chat_page.dart';
+import '../screens/chat/conversation_list_page.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/items/add_item_screen.dart';
 import '../screens/profile/profile_screen.dart';
@@ -33,12 +35,12 @@ class AppRoutes {
   /// Screen for listing a new item.
   static const String addItem = '/add-item';
 
-  /// Chat conversation list screen.
-  static const String chatList = '/chat';
+  /// Conversation list screen (requires authentication).
+  static const String conversations = '/conversations';
 
-  /// Individual conversation screen (navigated to with parameters, not in the
-  /// static route table).
-  static const String chat = '/chat/:id';
+  /// Individual conversation screen; navigated to with a
+  /// [ConversationModel] as route argument.
+  static const String chat = '/chat';
 
   /// Map of route names to their corresponding widget builders, suitable for
   /// passing directly to `MaterialApp.routes`.
@@ -47,6 +49,8 @@ class AppRoutes {
         welcome: (_) => const WelcomeScreen(),
         auth: (_) => const AuthScreen(),
         home: (_) => const HomeScreen(),
+        conversations: (_) => const ConversationListPage(),
+        chat: (_) => const ChatPage(),
         profile: (_) => const ProfileScreen(),
         addItem: (_) => const AddItemScreen(),
       };

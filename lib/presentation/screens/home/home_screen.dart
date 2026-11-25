@@ -8,7 +8,6 @@ import '../../../core/constants/app_static.dart';
 import '../../widgets/app_widgets.dart';
 import '../../viewmodels/account_viewmodel.dart';
 import '../../viewmodels/auth_viewmodel.dart';
-import '../../viewmodels/chat_viewmodel.dart';
 import '../../viewmodels/fingerprint_viewmodel.dart';
 import '../../viewmodels/item_viewmodel.dart';
 import '../../viewmodels/loan_viewmodel.dart';
@@ -18,6 +17,7 @@ import '../../viewmodels/review_viewmodel.dart';
 import '../../viewmodels/group_viewmodel.dart';
 import '../../viewmodels/calendar_viewmodel.dart';
 import '../../utils/notification_generator.dart';
+import '../../routes/app_routes.dart';
 import '../items/add_item_screen.dart';
 import '../items/all_items_screen.dart';
 import '../items/item_details_screen.dart';
@@ -131,8 +131,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _syncNotifications() async {
     final requests = context.read<RequestViewModel>();
     final loans = context.read<LoanViewModel>();
-    final chats = context.read<ChatViewModel>();
-    final auth = context.read<AuthViewModel>();
     final notifications = context.read<NotificationViewModel>();
     final generated = NotificationGenerator.generate(
       sent: requests.sent,
@@ -140,11 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
       activeBorrowing: loans.activeBorrowing,
       activeLending: loans.activeLending,
     );
-    final chatGenerated = NotificationGenerator.chatMessages(
-      messages: chats.messages,
-      myId: auth.user?.id ?? 0,
-    );
-    await notifications.mergeGenerated([...generated, ...chatGenerated]);
+    await notifications.mergeGenerated(generated);
   }
 
   @override
@@ -270,6 +264,14 @@ class _HomeTabState extends State<HomeTab> {
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        SquareIconButton(
+                          icon: Icons.message_outlined,
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            AppRoutes.conversations,
                           ),
                         ),
                       ],

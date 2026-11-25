@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/colors.dart';
-import '../widgets/app_widgets.dart';
-import '../widgets/calendar_widget.dart';
+import '../../widgets/app_widgets.dart';
+import '../../widgets/calendar_widget.dart';
 
 /// Calendar view of upcoming loan start and due dates.
 ///

@@ -1,5 +1,4 @@
 import 'format.dart';
-import '../../data/models/chat_message.dart';
 import '../../data/models/loan_model.dart';
 import '../../data/models/notification_model.dart';
 import '../../data/models/request_model.dart';
@@ -110,29 +109,6 @@ class NotificationGenerator {
       }
     }
 
-    result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return result;
-  }
-
-  /// Generates notifications for unread chat messages sent by others.
-  ///
-  /// Only messages whose sender is not [myId] and that are not yet read are
-  /// included, so the user gets one notification per new incoming message.
-  static List<NotificationModel> chatMessages({
-    required List<ChatMessage> messages,
-    required int myId,
-  }) {
-    final result = <NotificationModel>[];
-    for (final m in messages) {
-      if (m.senderId == myId || m.isRead) continue;
-      result.add(NotificationModel(
-        id: 'chat_${m.id}',
-        title: 'New message from ${m.senderName}',
-        message: m.text,
-        isRead: false,
-        createdAt: m.createdAt,
-      ));
-    }
     result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return result;
   }

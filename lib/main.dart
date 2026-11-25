@@ -11,7 +11,7 @@ import 'package:borrowcircle/data/repositories/account_repository_impl.dart';
 import 'package:borrowcircle/data/repositories/auth_repository_impl.dart';
 import 'package:borrowcircle/data/repositories/calendar_repository_impl.dart';
 import 'package:borrowcircle/data/repositories/fingerprint_repository_impl.dart';
-import 'package:borrowcircle/data/repositories/chat_repository_impl.dart';
+import 'package:borrowcircle/data/services/chat_service.dart';
 import 'package:borrowcircle/data/repositories/group_repository_impl.dart';
 import 'package:borrowcircle/data/repositories/item_repository_impl.dart';
 import 'package:borrowcircle/data/repositories/loan_repository_impl.dart';
@@ -22,7 +22,7 @@ import 'package:borrowcircle/data/repositories/review_repository_impl.dart';
 import 'package:borrowcircle/presentation/viewmodels/account_viewmodel.dart';
 import 'package:borrowcircle/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:borrowcircle/presentation/viewmodels/calendar_viewmodel.dart';
-import 'package:borrowcircle/presentation/viewmodels/chat_viewmodel.dart';
+import 'package:borrowcircle/presentation/viewmodels/conversation_viewmodel.dart';
 import 'package:borrowcircle/presentation/viewmodels/fingerprint_viewmodel.dart';
 import 'package:borrowcircle/presentation/viewmodels/group_viewmodel.dart';
 import 'package:borrowcircle/presentation/viewmodels/item_viewmodel.dart';
@@ -73,11 +73,12 @@ void main() async {
   final loanRepository = LoanRepositoryImpl(apiClient);
   final reviewRepository = ReviewRepositoryImpl(apiClient);
   final groupRepository = GroupRepositoryImpl(apiClient);
-  final chatRepository = ChatRepositoryImpl(apiClient);
 
   runApp(
-    MultiProvider(
-      providers: [
+    Provider(
+      create: (_) => ChatService(),
+      child: MultiProvider(
+        providers: [
         // Authentication & session.
         ChangeNotifierProvider(create: (_) => AuthViewModel(authRepository)),
 
@@ -93,12 +94,17 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LoanViewModel(loanRepository)),
         ChangeNotifierProvider(create: (_) => ReviewViewModel(reviewRepository)),
         ChangeNotifierProvider(create: (_) => GroupViewModel(groupRepository)),
-        ChangeNotifierProvider(create: (_) => ChatViewModel(chatRepository)),
+
+        // Chat (Firestore).
+        ChangeNotifierProvider(
+          create: (_) => ConversationViewModel(ChatService()),
+        ),
 
         // Derived state built from the loans above.
         ChangeNotifierProvider(create: (_) => CalendarViewModel(CalendarRepositoryImpl())),
       ],
       child: const BorrowCircleApp(),
+      ),
     ),
   );
 }

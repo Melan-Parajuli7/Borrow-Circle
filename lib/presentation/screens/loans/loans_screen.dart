@@ -7,14 +7,14 @@ import '../../../core/constants/app_static.dart';
 import '../../widgets/app_widgets.dart';
 import '../../../data/models/loan_model.dart';
 import '../../viewmodels/auth_viewmodel.dart';
-import '../../viewmodels/chat_viewmodel.dart';
+import '../../viewmodels/conversation_viewmodel.dart';
 import '../../viewmodels/loan_viewmodel.dart';
 import '../../viewmodels/review_viewmodel.dart';
 import '../loans/handover_screen.dart';
 import '../loans/return_item_screen.dart';
 import '../reviews/review_screen.dart';
 import '../../utils/receipt_export_service.dart';
-import '../chat/chat_screen.dart';
+import '../../routes/app_routes.dart';
 
 /// "Active loans" screen.
 class LoansScreen extends StatefulWidget {
@@ -387,23 +387,20 @@ class LoanCard extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () async {
-                  final vm = context.read<ChatViewModel>();
+                  final auth = context.read<AuthViewModel>();
+                  final vm = context.read<ConversationViewModel>();
+                  if (vm.currentUid == null) {
+                    await vm.load(
+                      auth.user?.id.toString() ?? '',
+                      auth.user?.fullName ?? '',
+                    );
+                  }
                   final conv = await vm.startConversation(
-                    _iAmOwner ? loan.borrowerId : loan.ownerId,
-                    itemId: loan.itemId,
+                    (_iAmOwner ? loan.borrowerId : loan.ownerId).toString(),
+                    itemId: loan.itemId?.toString(),
                   );
                   if (conv == null) return;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        conversationId: conv.id,
-                        participantId: conv.participantId,
-                        participantName: conv.participantName,
-                        participantAvatar: conv.participantAvatar,
-                      ),
-                    ),
-                  );
+                  Navigator.pushNamed(context, AppRoutes.chat, arguments: conv.id);
                 },
                 icon: const Icon(Icons.message, size: 18),
                 label: const Text('Message'),

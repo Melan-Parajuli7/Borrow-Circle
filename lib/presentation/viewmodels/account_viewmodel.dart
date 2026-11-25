@@ -2,21 +2,30 @@ import '../../data/repositories/account_repository.dart';
 import 'base_viewmodel.dart';
 
 /// ViewModel for account preferences management.
+///
+/// Holds notification, theme, handover spot, and contact visibility settings,
+/// loading them from and persisting them to [AccountRepository].
 class AccountViewModel extends BaseViewModel {
-  final AccountRepository _repository;
-
+  /// Creates an [AccountViewModel] backed by [repository].
   AccountViewModel(this._repository);
 
+  /// Repository used to read and write account preferences.
+  final AccountRepository _repository;
+
   bool _notificationsEnabled = true;
+  /// Whether notifications are enabled.
   bool get notificationsEnabled => _notificationsEnabled;
 
   String _themeMode = 'system';
+  /// Current theme mode: 'light', 'dark', or 'system'.
   String get themeMode => _themeMode;
 
   String _handoverSpot = '';
+  /// Saved default handover location.
   String get handoverSpot => _handoverSpot;
 
   bool _hideContactInfo = false;
+  /// Whether contact info is hidden from non-circle members.
   bool get hideContactInfo => _hideContactInfo;
 
   /// Loads all preferences from storage.

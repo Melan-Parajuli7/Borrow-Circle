@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../widgets/app_widgets.dart';
-import '../../viewmodels/auth_viewmodel.dart';
-import '../welcome/welcome_screen.dart';
-import '../home/home_screen.dart';
+import '../../core/constants/colors.dart';
+import '../widgets/app_widgets.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import './home_screen.dart';
+import './welcome_screen.dart';
 
 /// Initial splash screen that checks for an existing session.
+///
+/// Waits for the session restore and a minimum display time so the logo is
+/// visible, then navigates to the home screen if logged in or the welcome
+/// screen otherwise.
 class SplashScreen extends StatefulWidget {
+  /// Creates a [SplashScreen] with an optional [key].
   const SplashScreen({super.key});
 
   @override
@@ -22,10 +27,11 @@ class _SplashScreenState extends State<SplashScreen> {
     _start();
   }
 
+  /// Waits for the login check AND at least 1.5 seconds so the logo is visible,
+  /// then navigates to home or welcome.
   Future<void> _start() async {
     final authViewModel = context.read<AuthViewModel>();
 
-    // Wait for the login check AND at least 1.5 seconds so the logo is visible
     await Future.wait([
       authViewModel.tryAutoLogin(),
       Future.delayed(const Duration(milliseconds: 1500)),
@@ -35,7 +41,9 @@ class _SplashScreenState extends State<SplashScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => authViewModel.isLoggedIn ? const HomeScreen() : const WelcomeScreen(),
+        builder: (_) => authViewModel.isLoggedIn
+            ? const HomeScreen()
+            : const WelcomeScreen(),
       ),
     );
   }
@@ -52,15 +60,25 @@ class _SplashScreenState extends State<SplashScreen> {
             SizedBox(
               height: 44,
               width: 44,
-              child: CircularProgressIndicator(strokeWidth: 4, color: AppColors.primary),
+              child: CircularProgressIndicator(
+                strokeWidth: 4,
+                color: AppColors.primary,
+              ),
             ),
             SizedBox(height: 40),
             Text(
               'Loading Your Circle .....',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textDark),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+              ),
             ),
             SizedBox(height: 8),
-            Text('Just a moment, We are getting ready', style: TextStyle(fontSize: 15)),
+            Text(
+              'Just a moment, We are getting ready',
+              style: TextStyle(fontSize: 15),
+            ),
           ],
         ),
       ),

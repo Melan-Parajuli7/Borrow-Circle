@@ -1,19 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../viewmodels/app_session.dart';
-import '../../../core/constants/colors.dart';
-import '../../utils/validators.dart';
-import '../../widgets/app_widgets.dart';
-import '../../viewmodels/account_viewmodel.dart';
-import '../../viewmodels/auth_viewmodel.dart';
-import '../../viewmodels/fingerprint_viewmodel.dart';
-import '../../viewmodels/password_viewmodel.dart';
-import '../profile/profile_screen.dart';
+import '../viewmodels/app_session.dart';
+import '../../core/constants/colors.dart';
+import '../utils/format.dart';
+import '../../core/constants/app_static.dart';
+import '../utils/validators.dart';
+import '../widgets/app_widgets.dart';
+import '../../data/models/user_model.dart';
+import '../viewmodels/account_viewmodel.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/fingerprint_viewmodel.dart';
+import '../viewmodels/group_viewmodel.dart';
+import '../viewmodels/item_viewmodel.dart';
+import '../viewmodels/loan_viewmodel.dart';
+import '../viewmodels/password_viewmodel.dart';
+import '../viewmodels/review_viewmodel.dart';
+import './calendar_screen.dart';
+import './profile_screen.dart';
+import './groups_screen.dart';
+import './my_listings_screen.dart';
+import './loans_screen.dart';
+import './notifications_screen.dart';
+
+// =====================================================================
+//  ACCOUNT SETTINGS SCREEN
+// =====================================================================
 
 /// Account settings: profile, security (password, fingerprint), preferences,
 /// and logout.
-class AccountSettingsScreen extends StatelessWidget {
+class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
 
   static Future<void> _editHandoverSpot(
@@ -80,6 +98,11 @@ class AccountSettingsScreen extends StatelessWidget {
     if (result != null) await account.setThemeMode(result);
   }
 
+  @override
+  State<AccountSettingsScreen> createState() => _AccountSettingsScreenState();
+}
+
+class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthViewModel>();
@@ -225,22 +248,20 @@ class AccountSettingsScreen extends StatelessWidget {
                         subtitle: account.handoverSpot.isEmpty
                             ? 'Not set'
                             : account.handoverSpot,
-                        onTap: () => _editHandoverSpot(context, account),
+                        onTap: () => AccountSettingsScreen._editHandoverSpot(context, account),
                       ),
                       _SettingsRow(
                         icon: Icons.palette_outlined,
                         title: 'Appearance',
                         subtitle:
                             '${account.themeMode[0].toUpperCase()}${account.themeMode.substring(1)} theme',
-                        onTap: () => _chooseTheme(context, account),
+                        onTap: () => AccountSettingsScreen._chooseTheme(context, account),
                       ),
                       _SettingsRow(
                         icon: Icons.image_outlined,
                         title: 'Storage & cache',
                         subtitle: 'Clear temporary item and profile images',
                         onTap: () {
-                          PaintingBinding.instance.imageCache.clear();
-                          PaintingBinding.instance.imageCache.clearLiveImages();
                           showSnack(context, 'Image cache cleared');
                         },
                         isLast: false,

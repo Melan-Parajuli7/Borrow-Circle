@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../data/models/conversation_model.dart';
-import '../../routes/app_routes.dart';
-import '../../viewmodels/auth_viewmodel.dart';
-import '../../viewmodels/conversation_viewmodel.dart';
-import '../../widgets/app_widgets.dart';
-import '../../widgets/conversation_tile.dart';
+import '../routes/app_routes.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/conversation_viewmodel.dart';
+import '../widgets/app_widgets.dart';
+import '../widgets/conversation_tile.dart';
 
 /// The conversation list: the user's existing chats and a way to start one.
 ///

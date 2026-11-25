@@ -1,26 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../../core/constants/app_static.dart';
-import '../../utils/validators.dart';
-import '../../widgets/app_widgets.dart';
-import '../../../data/models/group_model.dart';
-import '../../viewmodels/auth_viewmodel.dart';
-import '../../viewmodels/group_viewmodel.dart';
-import '../../viewmodels/loan_viewmodel.dart';
-import '../../viewmodels/request_viewmodel.dart';
-import '../items/add_item_screen.dart';
-import '../items/item_details_screen.dart';
+import '../../core/constants/colors.dart';
+import '../../core/constants/app_static.dart';
+import '../utils/validators.dart';
+import '../widgets/app_widgets.dart';
+import '../../data/models/group_model.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/group_viewmodel.dart';
+import '../viewmodels/loan_viewmodel.dart';
+import '../viewmodels/request_viewmodel.dart';
+import './add_item_screen.dart';
+import './item_details_screen.dart';
 
 /// "My groups" screen.
 ///
 /// The backend has no group memberships, so:
 ///  - "Your groups"   = groups where the user listed at least one item (admin)
 ///  - "Campus groups" = every other group that lends items on campus
-class GroupsScreen extends StatelessWidget {
+class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});
 
+  @override
+  State<GroupsScreen> createState() => _GroupsScreenState();
+}
+
+class _GroupsScreenState extends State<GroupsScreen> {
   // Asks for a name, then opens "List a New Item" with that group preselected.
   Future<void> _createGroup(BuildContext context) async {
     final name = TextEditingController();
@@ -72,7 +77,6 @@ class GroupsScreen extends StatelessWidget {
     final mine = ctrl.managedBy(me);
     final others = ctrl.othersFor(me);
 
-    // active loans of a group = loans whose item belongs to it (matched by item id)
     int activeLoans(GroupModel g) {
       final ids = g.items.map((i) => i.id).toSet();
       return loans.activeLending.where((l) => ids.contains(l.itemId)).length +

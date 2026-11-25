@@ -42,7 +42,7 @@ class ConversationViewModel extends BaseViewModel {
     reset();
     _currentUid = currentUid;
     _currentName = currentName;
-    setLoading(true);
+    setBusy(true);
     try {
       _subscription = _chatService
           .conversationsStream(currentUid)
@@ -52,7 +52,7 @@ class ConversationViewModel extends BaseViewModel {
           ..addAll(conversations);
         notifyListeners();
       });
-      setLoading(false);
+      setBusy(false);
     } catch (error) {
       setError(error.toString());
     }
@@ -67,7 +67,7 @@ class ConversationViewModel extends BaseViewModel {
     String? itemId,
   }) async {
     if (_currentUid == null) return null;
-    setLoading(true);
+    setBusy(true);
     try {
       final id = await _chatService.createOrGetConversation(
         currentUid: _currentUid!,
@@ -89,7 +89,7 @@ class ConversationViewModel extends BaseViewModel {
       setError(error.toString());
       return null;
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   }
 

@@ -4,34 +4,40 @@ import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../viewmodels/app_session.dart';
-import '../../../core/constants/colors.dart';
-import '../../utils/format.dart';
-import '../../../core/constants/app_static.dart';
-import '../../utils/validators.dart';
-import '../../widgets/app_widgets.dart';
-import '../../../data/models/user_model.dart';
-import '../../viewmodels/auth_viewmodel.dart';
-import '../../viewmodels/group_viewmodel.dart';
-import '../../viewmodels/item_viewmodel.dart';
-import '../../viewmodels/loan_viewmodel.dart';
-import '../../viewmodels/review_viewmodel.dart';
-import '../account/account_screen.dart';
-import '../calendar/calendar_screen.dart';
-import '../groups/groups_screen.dart';
-import '../items/my_listings_screen.dart';
-import '../loans/loans_screen.dart';
-import '../notifications/notifications_screen.dart';
+import '../viewmodels/app_session.dart';
+import '../../core/constants/colors.dart';
+import '../utils/format.dart';
+import '../../core/constants/app_static.dart';
+import '../utils/validators.dart';
+import '../widgets/app_widgets.dart';
+import '../../data/models/user_model.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/group_viewmodel.dart';
+import '../viewmodels/item_viewmodel.dart';
+import '../viewmodels/loan_viewmodel.dart';
+import '../viewmodels/review_viewmodel.dart';
+import './account_screen.dart';
+import './calendar_screen.dart';
+import './conversation_list_screen.dart';
+import './groups_screen.dart';
+import './my_listings_screen.dart';
+import './loans_screen.dart';
+import './notifications_screen.dart';
 
 // =====================================================================
-//  PROFILE TAB
+//  PROFILE SCREEN
 // =====================================================================
 
 /// Profile tab: shows the user's stats, trust tier, and a menu of
 /// account-related destinations.
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   void _open(BuildContext context, Widget page) =>
       Navigator.push(context, MaterialPageRoute(builder: (_) => page));
 
@@ -148,15 +154,28 @@ class ProfileScreen extends StatelessWidget {
           ScreenHeader(
             title: 'My profile',
             showBack: false,
-            trailing: PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: AppColors.primary),
-              onSelected: (v) {
-                if (v == 'edit') _open(context, const EditProfileScreen());
-                if (v == 'logout') AppSession.logout(context);
-              },
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'edit', child: Text('Edit profile')),
-                PopupMenuItem(value: 'logout', child: Text('Log out')),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chat_bubble_outline, color: AppColors.primary),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ConversationListPage()),
+                  ),
+                  tooltip: 'Messages',
+                ),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: AppColors.primary),
+                  onSelected: (v) {
+                    if (v == 'edit') _open(context, const EditProfileScreen());
+                    if (v == 'logout') AppSession.logout(context);
+                  },
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(value: 'edit', child: Text('Edit profile')),
+                    PopupMenuItem(value: 'logout', child: Text('Log out')),
+                  ],
+                ),
               ],
             ),
           ),
@@ -196,15 +215,6 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 Center(
-                  child: Text(
-                    user.email,
-                    style: const TextStyle(
-                      color: AppColors.textGrey,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                Center(
                   child: TextButton(
                     onPressed: () => _open(context, const EditProfileScreen()),
                     child: const Text('Edit profile'),
@@ -222,7 +232,23 @@ class ProfileScreen extends StatelessWidget {
                   child: Row(
                     children: [
                       _Stat(value: '${items.myTotal}', label: 'Listings'),
+                      Transform.rotate(
+                        angle: 0.1,
+                        child: Container(
+                          width: 1,
+                          height: 32,
+                          color: AppColors.border,
+                        ),
+                      ),
                       _Stat(value: '${loans.completedCount}', label: 'Loans'),
+                      Transform.rotate(
+                        angle: 0.1,
+                        child: Container(
+                          width: 1,
+                          height: 32,
+                          color: AppColors.border,
+                        ),
+                      ),
                       _Stat(value: '${reviews.summary.total}', label: 'Reviews'),
                     ],
                   ),
@@ -282,25 +308,6 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                AppCard(
-                  onTap: () => _showQrPass(context, user),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.qr_code_2, color: AppColors.primary),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'My QR Pass',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      Icon(Icons.chevron_right, color: AppColors.textGrey),
-                    ],
-                  ),
-                ),
                 if (recentLoans.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   AppCard(
@@ -563,7 +570,7 @@ class _MenuRow extends StatelessWidget {
 }
 
 // =====================================================================
-//  EDIT PROFILE
+//  EDIT PROFILE SCREEN
 // =====================================================================
 
 /// Form for editing the user's profile details and avatar.
@@ -796,7 +803,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 }
 
 // =====================================================================
-//  BORROWING HISTORY
+//  BORROWING HISTORY SCREEN
 // =====================================================================
 
 /// Completed loan history, filterable by role and year.

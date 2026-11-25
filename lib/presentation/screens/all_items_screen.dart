@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../../core/constants/app_static.dart';
-import '../../widgets/app_widgets.dart';
-import '../../viewmodels/item_viewmodel.dart';
-import '../home/home_screen.dart';
-import '../items/item_details_screen.dart';
-import '../notifications/notifications_screen.dart';
+import '../../core/constants/colors.dart';
+import '../../core/constants/app_static.dart';
+import '../widgets/app_widgets.dart';
+import '../viewmodels/item_viewmodel.dart';
+import './home_screen.dart';
+import './item_details_screen.dart';
+import './notifications_screen.dart';
 
 /// Screen showing all items with search and filters.
 class AllItemsScreen extends StatefulWidget {

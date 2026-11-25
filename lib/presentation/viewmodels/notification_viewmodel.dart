@@ -3,14 +3,21 @@ import '../../data/repositories/notification_repository.dart';
 import 'base_viewmodel.dart';
 
 /// ViewModel for notification management.
+///
+/// Holds the list of in-app notifications and delegates persistence to
+/// [NotificationRepository].
 class NotificationViewModel extends BaseViewModel {
-  final NotificationRepository _repository;
-
+  /// Creates a [NotificationViewModel] backed by [repository].
   NotificationViewModel(this._repository);
 
+  /// Repository used to load and save notifications.
+  final NotificationRepository _repository;
+
   final List<NotificationModel> _notifications = [];
+  /// All notifications for the current user.
   List<NotificationModel> get notifications => _notifications;
 
+  /// Number of unread notifications.
   int get unreadCount =>
       _notifications.where((notification) => !notification.isRead).length;
 
@@ -51,8 +58,8 @@ class NotificationViewModel extends BaseViewModel {
   /// Merges [generated] notifications into the current list.
   ///
   /// Notifications are de-duplicated by [NotificationModel.id], so calling this
-  /// repeatedly (e.g. on every refresh) never creates duplicates. Read state of
-  /// existing notifications is preserved because already-known ids are skipped.
+  /// repeatedly never creates duplicates. Read state of existing notifications
+  /// is preserved because already-known ids are skipped.
   Future<void> mergeGenerated(List<NotificationModel> generated) async {
     if (generated.isEmpty) return;
     final known = {for (final n in _notifications) n.id};

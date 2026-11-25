@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 
-/// Base class for all ViewModels in the application.
+/// Base class for all ViewModels in the MVVM architecture.
 ///
-/// Provides common functionality such as loading state management,
-/// error handling, and [ChangeNotifier] integration for reactive UI updates.
+/// Provides:
+/// - [isLoading] / [isBusy] flag for UI spinners
+/// - [error] string for error messages
+/// - [setBusy] / [setError] / [clearError] helpers
 abstract class BaseViewModel extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
@@ -17,22 +19,21 @@ abstract class BaseViewModel extends ChangeNotifier {
   /// The last error message, if any.
   String? get error => _error;
 
-  /// Sets the loading state and notifies listeners.
-  @protected
-  void setLoading(bool value) {
+  /// Sets loading state and notifies listeners. Also clears any existing error.
+  void setBusy(bool value) {
     _isLoading = value;
+    _error = null;
     notifyListeners();
   }
 
-  /// Sets the error message and notifies listeners.
-  @protected
-  void setError(String? message) {
+  /// Sets an error message and stops loading.
+  void setError(String message) {
     _error = message;
+    _isLoading = false;
     notifyListeners();
   }
 
-  /// Clears the error message and notifies listeners.
-  @protected
+  /// Clears any existing error without changing loading state.
   void clearError() {
     _error = null;
     notifyListeners();
@@ -42,36 +43,33 @@ abstract class BaseViewModel extends ChangeNotifier {
   ///
   /// [action] is the async operation to perform.
   /// Returns `true` if the action succeeded, `false` otherwise.
-  @protected
   Future<bool> runWithLoading(Future<void> Function() action) async {
-    setLoading(true);
+    setBusy(true);
     clearError();
     try {
       await action();
-      setLoading(false);
+      setBusy(false);
       return true;
     } catch (e) {
       setError(e.toString());
-      setLoading(false);
       return false;
     }
   }
 
-  /// Executes an async action that returns a value, with automatic loading and error handling.
+  /// Executes an async action that returns a value, with automatic loading and
+  /// error handling.
   ///
   /// [action] is the async operation to perform.
   /// Returns the result of the action, or `null` if it failed.
-  @protected
   Future<T?> runWithLoadingValue<T>(Future<T> Function() action) async {
-    setLoading(true);
+    setBusy(true);
     clearError();
     try {
       final result = await action();
-      setLoading(false);
+      setBusy(false);
       return result;
     } catch (e) {
       setError(e.toString());
-      setLoading(false);
       return null;
     }
   }

@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../../widgets/app_widgets.dart';
-import '../../widgets/calendar_widget.dart';
+import '../widgets/app_widgets.dart';
+import '../widgets/calendar_widget.dart';
 
 /// Calendar view of upcoming loan start and due dates.
-///
-/// This page only hosts [CalendarWidget]; all calendar logic lives in the
-/// widget and [CalendarViewModel] (provided globally in [main]).
-class CalendarScreen extends StatelessWidget {
-  /// Creates a [CalendarScreen] with an optional [key].
+class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
 
+  @override
+  State<CalendarScreen> createState() => _CalendarScreenState();
+}
+
+class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_static.dart';
-import '../screens/welcome/welcome_screen.dart';
+import '../screens/welcome_screen.dart';
 import 'account_viewmodel.dart';
 import 'auth_viewmodel.dart';
 import 'calendar_viewmodel.dart';

@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../utils/format.dart';
-import '../../../core/constants/app_static.dart';
-import '../../widgets/app_widgets.dart';
-import '../../viewmodels/auth_viewmodel.dart';
-import '../../viewmodels/loan_viewmodel.dart';
-import '../../../data/models/loan_model.dart';
+import '../../core/constants/colors.dart';
+import '../utils/format.dart';
+import '../../core/constants/app_static.dart';
+import '../widgets/app_widgets.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/loan_viewmodel.dart';
+import '../../data/models/loan_model.dart';
+import './qr_scanner_screen.dart';
 
 /// Handover confirmation.
+///
 /// - BORROWER sees the one-time 6-digit code (+ QR) and shows it to the owner.
 /// - OWNER types that code and confirms the handover.
 class HandoverScreen extends StatefulWidget {
@@ -73,6 +75,21 @@ class _HandoverScreenState extends State<HandoverScreen> {
     }
   }
 
+  /// Scans the borrower's QR code and fills the 6-digit code into the input field.
+  Future<void> _scanQR() async {
+    final scanned = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (_) => const QrScannerScreen()),
+    );
+    if (!mounted || scanned == null) return;
+    final code = scanned.trim();
+    if (code.length == 6) {
+      _code.text = code;
+    } else {
+      showSnack(context, 'Invalid QR code', isError: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authViewModel = context.watch<AuthViewModel>();
@@ -100,7 +117,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
   }
 
   Widget _body(LoanModel loan, bool isOwner, bool busy) {
-    final started = !loan.awaitingHandover; // already handed over
+    final started = !loan.awaitingHandover;
 
     return Column(
       children: [
@@ -193,7 +210,6 @@ class _HandoverScreenState extends State<HandoverScreen> {
     );
   }
 
-  // Borrower: shows the code
   Widget _borrowerCode(LoanModel loan) {
     final code = loan.handoverCode ?? '';
     return Container(
@@ -235,7 +251,6 @@ class _HandoverScreenState extends State<HandoverScreen> {
     );
   }
 
-  // Owner: types the code
   Widget _ownerCodeEntry() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,7 +264,15 @@ class _HandoverScreenState extends State<HandoverScreen> {
           maxLength: 6,
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 30, letterSpacing: 10, fontWeight: FontWeight.w800),
-          decoration: const InputDecoration(hintText: '------', counterText: ''),
+          decoration: InputDecoration(
+            hintText: '------',
+            counterText: '',
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.qr_code_scanner, color: AppColors.primary),
+              onPressed: _scanQR,
+              tooltip: 'Scan QR code',
+            ),
+          ),
         ),
         const SizedBox(height: 10),
         InkWell(

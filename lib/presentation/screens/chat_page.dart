@@ -1,24 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../data/models/conversation_model.dart';
-import '../../../data/services/chat_service.dart';
-import '../../../core/constants/colors.dart';
-import '../../routes/app_routes.dart';
-import '../../viewmodels/auth_viewmodel.dart';
-import '../../viewmodels/chat_viewmodel.dart';
-import '../../widgets/app_widgets.dart';
-import '../../widgets/chat_input_field.dart';
-import '../../widgets/message_bubble.dart';
+import '../../data/models/conversation_model.dart';
+import '../../data/services/chat_service.dart';
+import '../../core/constants/colors.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/chat_viewmodel.dart';
+import '../widgets/app_widgets.dart';
+import '../widgets/chat_input_field.dart';
+import '../widgets/message_bubble.dart';
 
 /// The chat page for one conversation: message list + input field.
 ///
 /// The route argument is the [ConversationModel]. The page scopes a
 /// [ChatViewModel] to this conversation and never calls Firestore directly.
-class ChatPage extends StatelessWidget {
+class ChatPage extends StatefulWidget {
   /// Creates a [ChatPage] with an optional [key].
   const ChatPage({super.key});
 
+  @override
+  State<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     final conversation =

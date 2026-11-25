@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../data/datasources/local/token_storage.dart';
 import 'app_exception.dart';
 
 /// Thin wrapper over [http.Client] that communicates with the Node.js Express
@@ -21,14 +21,17 @@ import 'app_exception.dart';
 /// All repositories depend on an [ApiClient] instance (constructor injection)
 /// rather than calling a static service, matching the MVVM reference layout.
 class ApiClient {
-  /// Creates an [ApiClient] with the given HTTP client.
+  /// Creates an [ApiClient] with the given HTTP client and preferences store.
   ///
   /// The [client] is used for every request. Token persistence is handled by
-  /// [TokenStorage] (a thin wrapper over `SharedPreferences`).
-  ApiClient(this._client);
+  /// [prefs] (a [SharedPreferences] instance).
+  ApiClient(this._client, this._prefs);
 
   /// Underlying HTTP client used to make network requests.
   final http.Client _client;
+
+  /// SharedPreferences instance used to retrieve the stored authentication token.
+  final SharedPreferences _prefs;
 
   /// Timeout applied to every request.
   static const Duration _timeout = Duration(seconds: 20);
@@ -36,13 +39,23 @@ class ApiClient {
   // ---------------- Public Methods ----------------
 
   /// Sends a GET request to `[baseUrl][apiPrefix][path]`.
+  ///
+  /// Returns the decoded JSON body as a [Map] on success (2xx). Throws a typed
+  /// [AppException] on client or server errors, and [FetchDataException] on
+  /// network failures.
   Future<Map<String, dynamic>> get(
     String path, {
     Map<String, dynamic>? query,
   }) =>
       _call(() => _client.get(_uri(path, query), headers: _headers()));
 
-  /// Sends a POST request.
+  /// Sends a POST request to `[baseUrl][apiPrefix][path]` with an optional JSON
+  /// [body].
+  ///
+  /// Returns the decoded JSON body as a [Map] on success (2xx). Throws a typed
+  /// [AppException] on client or server errors, and [FetchDataException] on
+  /// network failures. When [refreshOn401] is true (the default), a 401
+  /// triggers a token refresh and a single retry.
   Future<Map<String, dynamic>> post(
     String path, {
     Map<String, dynamic>? body,
@@ -57,7 +70,12 @@ class ApiClient {
         refreshOn401: refreshOn401,
       );
 
-  /// Sends a PUT request.
+  /// Sends a PUT request to `[baseUrl][apiPrefix][path]` with an optional JSON
+  /// [body].
+  ///
+  /// Returns the decoded JSON body as a [Map] on success (2xx). Throws a typed
+  /// [AppException] on client or server errors, and [FetchDataException] on
+  /// network failures.
   Future<Map<String, dynamic>> put(
     String path, {
     Map<String, dynamic>? body,
@@ -70,7 +88,12 @@ class ApiClient {
         ),
       );
 
-  /// Sends a PATCH request.
+  /// Sends a PATCH request to `[baseUrl][apiPrefix][path]` with an optional
+  /// JSON [body].
+  ///
+  /// Returns the decoded JSON body as a [Map] on success (2xx). Throws a typed
+  /// [AppException] on client or server errors, and [FetchDataException] on
+  /// network failures.
   Future<Map<String, dynamic>> patch(
     String path, {
     Map<String, dynamic>? body,
@@ -83,13 +106,18 @@ class ApiClient {
         ),
       );
 
-  /// Sends a DELETE request.
+  /// Sends a DELETE request to `[baseUrl][apiPrefix][path]`.
+  ///
+  /// Returns the decoded JSON body as a [Map] on success (2xx). Throws a typed
+  /// [AppException] on client or server errors, and [FetchDataException] on
+  /// network failures.
   Future<Map<String, dynamic>> delete(String path) =>
       _call(() => _client.delete(_uri(path), headers: _headers()));
 
   /// Sends a multipart request (for file uploads).
   ///
   /// [method] is `"POST"` or `"PUT"`. [filePath] can be null (no new image).
+  /// Returns the decoded JSON body as a [Map] on success (2xx).
   Future<Map<String, dynamic>> multipart(
     String method,
     String path, {
@@ -125,18 +153,20 @@ class ApiClient {
     if (json) headers['Content-Type'] = 'application/json';
 
     final cookies = <String>[];
-    if (TokenStorage.accessToken != null) {
-      cookies.add('accessToken=${TokenStorage.accessToken}');
+    final accessToken = _prefs.getString(AppConstants.tokenKey) ?? '';
+    final refreshToken = _prefs.getString(AppConstants.refreshTokenKey) ?? '';
+    if (accessToken.isNotEmpty) {
+      cookies.add('accessToken=$accessToken');
     }
-    if (TokenStorage.refreshToken != null) {
-      cookies.add('refreshToken=${TokenStorage.refreshToken}');
+    if (refreshToken.isNotEmpty) {
+      cookies.add('refreshToken=$refreshToken');
     }
     if (cookies.isNotEmpty) headers['Cookie'] = cookies.join('; ');
     return headers;
   }
 
   /// Saves cookies from the response (used for token persistence).
-  static Future<void> _saveCookies(http.Response res) async {
+  Future<void> _saveCookies(http.Response res) async {
     final header = res.headers['set-cookie'];
     if (header == null) return;
 
@@ -146,12 +176,27 @@ class ApiClient {
       final name = m.group(1);
       final value = m.group(2) ?? '';
       final token = value.isEmpty ? null : value;
-      if (name == 'accessToken') await TokenStorage.setAccess(token);
-      if (name == 'refreshToken') await TokenStorage.setRefresh(token);
+      if (name == 'accessToken') {
+        if (token == null) {
+          await _prefs.remove(AppConstants.tokenKey);
+        } else {
+          await _prefs.setString(AppConstants.tokenKey, token);
+        }
+      }
+      if (name == 'refreshToken') {
+        if (token == null) {
+          await _prefs.remove(AppConstants.refreshTokenKey);
+        } else {
+          await _prefs.setString(AppConstants.refreshTokenKey, token);
+        }
+      }
     }
   }
 
   /// Attempts to refresh the access token using the refresh token.
+  ///
+  /// Returns `true` if the refresh succeeded, `false` otherwise. On failure the
+  /// stored tokens are cleared.
   Future<bool> _refresh() async {
     try {
       final res = await _client
@@ -159,14 +204,24 @@ class ApiClient {
           .timeout(_timeout);
       await _saveCookies(res);
       if (res.statusCode == 200) return true;
-      await TokenStorage.clear();
+      await _clearTokens();
       return false;
     } catch (_) {
       return false;
     }
   }
 
+  /// Clears both tokens from [SharedPreferences].
+  Future<void> _clearTokens() async {
+    await _prefs.remove(AppConstants.tokenKey);
+    await _prefs.remove(AppConstants.refreshTokenKey);
+  }
+
   /// Core request execution with automatic token refresh and error handling.
+  ///
+  /// [send] is the callback that performs the actual HTTP call. When
+  /// [refreshOn401] is true and the response is a 401, the access token is
+  /// refreshed and the request is retried once.
   Future<Map<String, dynamic>> _call(
     Future<http.Response> Function() send, {
     bool refreshOn401 = true,
@@ -178,7 +233,7 @@ class ApiClient {
       // Handle token expiration
       if (res.statusCode == 401 &&
           refreshOn401 &&
-          TokenStorage.refreshToken != null) {
+          _prefs.getString(AppConstants.refreshTokenKey) != null) {
         if (await _refresh()) {
           res = await send().timeout(_timeout);
           await _saveCookies(res);
@@ -198,6 +253,10 @@ class ApiClient {
 
   /// Processes the HTTP response and returns the JSON body or throws an
   /// [AppException].
+  ///
+  /// For 2xx status codes the decoded JSON body is returned. For any other
+  /// status code a [BadRequestException] is thrown with the error message
+  /// extracted from the response body.
   Map<String, dynamic> _handle(http.Response res) {
     Map<String, dynamic> body = {};
     try {

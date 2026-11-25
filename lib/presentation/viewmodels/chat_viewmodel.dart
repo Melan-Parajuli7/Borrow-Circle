@@ -51,7 +51,7 @@ class ChatViewModel extends BaseViewModel {
 
   /// Loads and observes the messages of this conversation.
   Future<void> load() async {
-    setLoading(true);
+    setBusy(true);
     try {
       _subscription = _chatService.messagesStream(conversationId).listen((messages) {
         _messages
@@ -63,7 +63,7 @@ class ChatViewModel extends BaseViewModel {
         conversationId: conversationId,
         currentUid: currentUid,
       );
-      setLoading(false);
+      setBusy(false);
     } catch (error) {
       setError(error.toString());
     }
@@ -76,7 +76,7 @@ class ChatViewModel extends BaseViewModel {
   Future<bool> sendMessage(String text) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return false;
-    setLoading(true);
+    setBusy(true);
     try {
       await _chatService.sendMessage(
         conversationId: conversationId,
@@ -84,11 +84,11 @@ class ChatViewModel extends BaseViewModel {
         recipientId: otherUid,
         text: trimmed,
       );
-      setLoading(false);
+      setBusy(false);
       return true;
     } catch (error) {
       setError(error.toString());
-      setLoading(false);
+      setBusy(false);
       return false;
     }
   }

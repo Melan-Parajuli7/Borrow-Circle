@@ -4,12 +4,18 @@ import '../../data/repositories/group_repository.dart';
 import 'base_viewmodel.dart';
 
 /// ViewModel for group management.
+///
+/// Holds the list of campus groups (built from group items) and delegates
+/// data operations to the [GroupRepository].
 class GroupViewModel extends BaseViewModel {
-  final GroupRepository _repository;
-
+  /// Creates a [GroupViewModel] backed by [repository].
   GroupViewModel(this._repository);
 
+  /// Repository used to perform group operations.
+  final GroupRepository _repository;
+
   final List<GroupModel> _groups = [];
+  /// All campus groups.
   List<GroupModel> get groups => _groups;
 
   /// Loads all groups.

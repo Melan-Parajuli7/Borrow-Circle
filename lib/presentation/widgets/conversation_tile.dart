@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter/material.dart';
-
 import '../../core/constants/colors.dart';
 import '../../data/models/conversation_model.dart';
 import 'app_widgets.dart';

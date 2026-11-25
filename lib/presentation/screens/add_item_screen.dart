@@ -4,15 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../../core/constants/app_static.dart';
-import '../../utils/validators.dart';
-import '../../widgets/app_widgets.dart';
-import '../../viewmodels/item_viewmodel.dart';
-import '../../../data/models/item_model.dart';
+import '../../core/constants/colors.dart';
+import '../../core/constants/app_static.dart';
+import '../utils/validators.dart';
+import '../widgets/app_widgets.dart';
+import '../viewmodels/item_viewmodel.dart';
+import '../../data/models/item_model.dart';
 
 /// Screen for creating or editing an item listing.
 class AddItemScreen extends StatefulWidget {
+  /// The item being edited, if any.
   final ItemModel? editItem;
 
   /// When set, the item is created as a group item under this group name.

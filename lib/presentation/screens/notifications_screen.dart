@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../widgets/app_widgets.dart';
-import '../../viewmodels/account_viewmodel.dart';
-import '../../viewmodels/notification_viewmodel.dart';
+import '../../core/constants/colors.dart';
+import '../widgets/app_widgets.dart';
+import '../viewmodels/account_viewmodel.dart';
+import '../viewmodels/notification_viewmodel.dart';
 
 /// Shows the user's in-app notifications.
-///
-/// Notifications are hidden when the user has disabled them in
-/// [AccountSettingsScreen]. Tapping a notification marks it as read, and the
-/// header exposes a "Mark all read" action.
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
 
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final account = context.watch<AccountViewModel>();

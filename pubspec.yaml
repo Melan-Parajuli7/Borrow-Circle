@@ -41,6 +41,7 @@ dependencies:
   shared_preferences: ^2.3.2   # keeps the login on the phone
   image_picker: ^1.1.2         # item photo / profile picture
   qr_flutter: ^4.1.0           # shows the handover code as a QR
+  mobile_scanner: ^5.0.1       # scans QR codes for handover
   intl: ^0.19.0                # date formatting
   local_auth: ^3.0.2
   table_calendar: ^3.1.3

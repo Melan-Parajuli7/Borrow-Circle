@@ -1,17 +1,28 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../widgets/app_widgets.dart';
-import '../auth/auth_screen.dart';
+import '../../core/constants/colors.dart';
+import '../widgets/app_widgets.dart';
+import './auth_screen.dart';
 
 /// First screen for people who are not logged in ("Less Building. More Sharing.").
-class WelcomeScreen extends StatelessWidget {
+///
+/// Provides entry points to sign up or log in. On tapping either action the
+/// [AuthScreen] is pushed with the appropriate initial tab.
+class WelcomeScreen extends StatefulWidget {
+  /// Creates a [WelcomeScreen] with an optional [key].
   const WelcomeScreen({super.key});
 
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
   void _open(BuildContext context, bool signUp) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => AuthScreen(startOnSignUp: signUp)),
+      MaterialPageRoute(
+        builder: (_) => AuthScreen(startOnSignUp: signUp),
+      ),
     );
   }
 

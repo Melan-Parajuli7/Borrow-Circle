@@ -3,56 +3,74 @@ import '../../data/repositories/item_repository.dart';
 import 'base_viewmodel.dart';
 
 /// ViewModel for item management (feed, search, my listings, CRUD).
+///
+/// Holds the item feed, the user's own listings, and active filters.
+/// Delegates all data operations to the [ItemRepository].
 class ItemViewModel extends BaseViewModel {
-  final ItemRepository _repository;
-
+  /// Creates an [ItemViewModel] backed by [repository].
   ItemViewModel(this._repository);
+
+  /// Repository used to perform item CRUD and feed operations.
+  final ItemRepository _repository;
 
   // Feed state
   final List<ItemModel> _items = [];
+  /// The full list of items for the current feed.
   List<ItemModel> get items => _items;
 
   bool _hasMore = false;
+  /// Whether more pages of the feed are available.
   bool get hasMore => _hasMore;
 
   int _page = 1;
 
   // Filters
   String _search = '';
+  /// Current search query.
   String get search => _search;
 
   String? _category;
+  /// Currently selected category filter, if any.
   String? get category => _category;
 
   String? _condition;
+  /// Currently selected condition filter, if any.
   String? get condition => _condition;
 
   bool _onlyAvailable = false;
+  /// Whether only available items are shown.
   bool get onlyAvailable => _onlyAvailable;
 
   String _typeFilter = 'all'; // 'all' | 'peer' | 'group'
+  /// Current type filter: 'all', 'peer', or 'group'.
   String get typeFilter => _typeFilter;
 
+  /// Items matching the current type filter.
   List<ItemModel> get visibleItems {
     if (_typeFilter == 'peer') return _items.where((i) => !i.isGroupItem).toList();
     if (_typeFilter == 'group') return _items.where((i) => i.isGroupItem).toList();
     return _items;
   }
 
+  /// Whether any filters (category, condition, availability) are active.
   bool get hasActiveFilters => _category != null || _condition != null || _onlyAvailable;
 
   // My listings state
   final List<ItemModel> _myItems = [];
+  /// The current user's own item listings.
   List<ItemModel> get myItems => _myItems;
 
   int _myTotal = 0;
+  /// Total number of the user's own listings.
   int get myTotal => _myTotal;
 
   // Action state
   bool _isSaving = false;
+  /// Whether a save (create/update) operation is in progress.
   bool get isSaving => _isSaving;
 
   String? _actionError;
+  /// Error from the last item action, if any.
   String? get actionError => _actionError;
 
   /// Loads the item feed (first page).
@@ -77,7 +95,7 @@ class ItemViewModel extends BaseViewModel {
   /// Loads the next page of the feed.
   Future<void> loadMore() async {
     if (isLoading || _isSaving || !_hasMore) return;
-    _isSaving = true; // reuse isSaving for loadMore
+    _isSaving = true;
     notifyListeners();
     try {
       final result = await _repository.getItems(
@@ -134,6 +152,8 @@ class ItemViewModel extends BaseViewModel {
   }
 
   /// Creates a new item.
+  ///
+  /// Returns the created [ItemModel] on success, or `null` on failure.
   Future<ItemModel?> createItem({
     required String title,
     String? description,
@@ -157,6 +177,8 @@ class ItemViewModel extends BaseViewModel {
   }
 
   /// Updates an existing item.
+  ///
+  /// Returns the updated [ItemModel] on success, or `null` on failure.
   Future<ItemModel?> updateItem(
     int id, {
     required String title,
@@ -184,6 +206,8 @@ class ItemViewModel extends BaseViewModel {
   }
 
   /// Deletes an item.
+  ///
+  /// Returns `true` on success, `false` on failure.
   Future<bool> deleteItem(int id) async {
     return runWithLoading(() async {
       await _repository.deleteItem(id);
@@ -191,6 +215,8 @@ class ItemViewModel extends BaseViewModel {
   }
 
   /// Fetches a single item by ID.
+  ///
+  /// Returns the [ItemModel] on success, or `null` on failure.
   Future<ItemModel?> getItem(int id) async {
     return runWithLoadingValue(() async {
       return await _repository.getItem(id);

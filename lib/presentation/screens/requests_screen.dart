@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../utils/format.dart';
-import '../../../core/constants/app_static.dart';
-import '../../widgets/app_widgets.dart';
-import '../../../data/models/request_model.dart';
-import '../../viewmodels/loan_viewmodel.dart';
-import '../../viewmodels/request_viewmodel.dart';
-import '../loans/handover_screen.dart';
+import '../../core/constants/colors.dart';
+import '../utils/format.dart';
+import '../../core/constants/app_static.dart';
+import '../widgets/app_widgets.dart';
+import '../../data/models/request_model.dart';
+import '../viewmodels/loan_viewmodel.dart';
+import '../viewmodels/request_viewmodel.dart';
+import './handover_screen.dart';
 
 /// "My requests" screen: Sent | Received.
 class RequestsScreen extends StatefulWidget {
@@ -19,7 +19,7 @@ class RequestsScreen extends StatefulWidget {
 }
 
 class _RequestsScreenState extends State<RequestsScreen> {
-  int _tab = 0; // 0 = sent, 1 = received
+  int _tab = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +78,6 @@ class _RequestCard extends StatelessWidget {
   final bool isReceived;
   const _RequestCard({required this.request, required this.isReceived});
 
-  // Owner starts the loan for an approved request -> opens the handover screen.
   Future<void> _startLoan(BuildContext context) async {
     final loanViewModel = context.read<LoanViewModel>();
     final loan = await loanViewModel.createLoan(request.id);
@@ -209,7 +208,6 @@ class _RequestCard extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Actions / footer text
           if (isReceived && request.isPending)
             Row(
               children: [

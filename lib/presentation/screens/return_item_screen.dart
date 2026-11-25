@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../utils/format.dart';
-import '../../../core/constants/app_static.dart';
-import '../../widgets/app_widgets.dart';
-import '../../../data/models/loan_model.dart';
-import '../../viewmodels/auth_viewmodel.dart';
-import '../../viewmodels/loan_viewmodel.dart';
-import '../reviews/review_screen.dart';
+import '../../core/constants/colors.dart';
+import '../utils/format.dart';
+import '../../core/constants/app_static.dart';
+import '../widgets/app_widgets.dart';
+import '../../data/models/loan_model.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/loan_viewmodel.dart';
+import './review_screen.dart';
 
 /// Return confirmation.
+///
 /// - OWNER ticks the checklist and confirms the item came back.
 /// - BORROWER only sees how to return it (the backend lets the owner confirm).
 class ReturnItemScreen extends StatefulWidget {
@@ -36,7 +37,6 @@ class _ReturnItemScreenState extends State<ReturnItemScreen> {
     if (!mounted) return;
     if (updated != null) {
       showSnack(context, 'Item returned. The circle is closed!');
-      // go straight to the review screen
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ReviewScreen(loan: updated)));
     } else {
       showSnack(context, loanViewModel.actionError ?? 'Could not confirm the return', isError: true);

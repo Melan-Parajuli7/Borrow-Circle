@@ -3,20 +3,29 @@ import '../../data/repositories/request_repository.dart';
 import 'base_viewmodel.dart';
 
 /// ViewModel for borrow request management (sent, received, approve, reject, cancel).
+///
+/// Holds the lists of sent and received requests and delegates data operations
+/// to the [RequestRepository].
 class RequestViewModel extends BaseViewModel {
-  final RequestRepository _repository;
-
+  /// Creates a [RequestViewModel] backed by [repository].
   RequestViewModel(this._repository);
 
+  /// Repository used to perform request operations.
+  final RequestRepository _repository;
+
   final List<RequestModel> _sent = [];
+  /// Requests sent by the current user.
   List<RequestModel> get sent => _sent;
 
   final List<RequestModel> _received = [];
+  /// Requests received for the current user's items.
   List<RequestModel> get received => _received;
 
   String? _actionError;
+  /// Error from the last request action, if any.
   String? get actionError => _actionError;
 
+  /// Number of pending received requests.
   int get pendingReceived => _received.where((r) => r.isPending).length;
 
   /// Loads all requests (sent and received).
@@ -36,6 +45,8 @@ class RequestViewModel extends BaseViewModel {
   }
 
   /// Creates a new borrow request.
+  ///
+  /// Returns the created [RequestModel] on success, or `null` on failure.
   Future<RequestModel?> createRequest({
     required int itemId,
     required String startDate,
@@ -53,6 +64,8 @@ class RequestViewModel extends BaseViewModel {
   }
 
   /// Approves a request.
+  ///
+  /// Returns `true` on success, `false` on failure.
   Future<bool> approve(int id) async {
     return runWithLoading(() async {
       await _repository.approve(id);
@@ -60,6 +73,8 @@ class RequestViewModel extends BaseViewModel {
   }
 
   /// Rejects a request.
+  ///
+  /// Returns `true` on success, `false` on failure.
   Future<bool> reject(int id) async {
     return runWithLoading(() async {
       await _repository.reject(id);
@@ -67,6 +82,8 @@ class RequestViewModel extends BaseViewModel {
   }
 
   /// Cancels a request.
+  ///
+  /// Returns `true` on success, `false` on failure.
   Future<bool> cancel(int id) async {
     return runWithLoading(() async {
       await _repository.cancel(id);

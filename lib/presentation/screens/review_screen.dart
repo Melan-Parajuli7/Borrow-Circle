@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../utils/format.dart';
-import '../../../core/constants/app_static.dart';
-import '../../utils/validators.dart';
-import '../../widgets/app_widgets.dart';
-import '../../../data/models/loan_model.dart';
-import '../../viewmodels/auth_viewmodel.dart';
-import '../../viewmodels/review_viewmodel.dart';
+import '../../core/constants/colors.dart';
+import '../utils/format.dart';
+import '../../core/constants/app_static.dart';
+import '../utils/validators.dart';
+import '../widgets/app_widgets.dart';
+import '../../data/models/loan_model.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/review_viewmodel.dart';
 
 /// Leave a review after the item was returned.
 ///

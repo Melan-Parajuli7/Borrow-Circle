@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../../core/constants/app_static.dart';
-import '../../widgets/app_widgets.dart';
-import '../../../data/models/item_model.dart';
-import '../../../data/models/review_model.dart';
-import '../../viewmodels/auth_viewmodel.dart';
-import '../../viewmodels/item_viewmodel.dart';
-import '../../viewmodels/review_viewmodel.dart';
-import '../../viewmodels/group_viewmodel.dart';
-import '../items/add_item_screen.dart';
-import '../items/make_request_screen.dart';
+import '../../core/constants/colors.dart';
+import '../../core/constants/app_static.dart';
+import '../widgets/app_widgets.dart';
+import '../../data/models/item_model.dart';
+import '../../data/models/review_model.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/item_viewmodel.dart';
+import '../viewmodels/review_viewmodel.dart';
+import '../viewmodels/group_viewmodel.dart';
+import './add_item_screen.dart';
+import './make_request_screen.dart';
 
 /// Item details screen.
 class ItemDetailsScreen extends StatefulWidget {
+  /// The item to display.
   final ItemModel item;
   const ItemDetailsScreen({super.key, required this.item});
 

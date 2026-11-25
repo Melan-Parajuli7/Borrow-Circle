@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../../core/constants/app_static.dart';
-import '../../widgets/app_widgets.dart';
-import '../../../data/models/item_model.dart';
-import '../../viewmodels/item_viewmodel.dart';
-import '../items/add_item_screen.dart';
-import '../items/item_details_screen.dart';
+import '../../core/constants/colors.dart';
+import '../../core/constants/app_static.dart';
+import '../widgets/app_widgets.dart';
+import '../../data/models/item_model.dart';
+import '../viewmodels/item_viewmodel.dart';
+import './add_item_screen.dart';
+import './item_details_screen.dart';
 
 /// "My listings" - items I listed (tap to open, menu to edit or delete).
-class MyListingsScreen extends StatelessWidget {
+class MyListingsScreen extends StatefulWidget {
   const MyListingsScreen({super.key});
 
+  @override
+  State<MyListingsScreen> createState() => _MyListingsScreenState();
+}
+
+class _MyListingsScreenState extends State<MyListingsScreen> {
   Future<void> _setAvailability(
     BuildContext context,
     ItemModel item,

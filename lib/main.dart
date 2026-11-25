@@ -1,12 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:borrowcircle/app.dart';
 import 'package:borrowcircle/core/network/api_client.dart';
-import 'package:borrowcircle/data/datasources/local/token_storage.dart';
 import 'package:borrowcircle/data/repositories/account_repository_impl.dart';
 import 'package:borrowcircle/data/repositories/auth_repository_impl.dart';
 import 'package:borrowcircle/data/repositories/calendar_repository_impl.dart';
@@ -31,7 +30,7 @@ import 'package:borrowcircle/presentation/viewmodels/notification_viewmodel.dart
 import 'package:borrowcircle/presentation/viewmodels/password_viewmodel.dart';
 import 'package:borrowcircle/presentation/viewmodels/request_viewmodel.dart';
 import 'package:borrowcircle/presentation/viewmodels/review_viewmodel.dart';
-import 'package:borrowcircle/firebase_options.dart';
+import 'package:borrowcircle/core/constants/firebase_options.dart';
 
 /// Entry point of the BorrowCircle Flutter application.
 ///
@@ -50,9 +49,8 @@ import 'package:borrowcircle/firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Tokens are persisted in SharedPreferences and restored before the first
-  // request so the splash screen can restore an existing session.
-  await TokenStorage.load();
+  // SharedPreferences is used to persist the JWT token across app restarts.
+  final prefs = await SharedPreferences.getInstance();
 
   // Firebase is required by the Firestore chat service. iOS and web are not
   // configured in this build, so initialisation is skipped on those platforms.
@@ -64,10 +62,10 @@ void main() async {
 
   // API client handles HTTP requests and automatically attaches the session
   // cookies. Every repository receives this same instance.
-  final apiClient = ApiClient(http.Client());
+  final apiClient = ApiClient(http.Client(), prefs);
 
   // Repository implementations backed by the Express API.
-  final authRepository = AuthRepositoryImpl(apiClient);
+  final authRepository = AuthRepositoryImpl(apiClient, prefs);
   final itemRepository = ItemRepositoryImpl(apiClient);
   final requestRepository = RequestRepositoryImpl(apiClient);
   final loanRepository = LoanRepositoryImpl(apiClient);

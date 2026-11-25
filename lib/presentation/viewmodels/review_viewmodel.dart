@@ -4,21 +4,30 @@ import '../../data/repositories/review_repository.dart';
 import 'base_viewmodel.dart';
 
 /// ViewModel for review management.
+///
+/// Holds received reviews and the rating summary for the current user.
+/// Delegates data operations to the [ReviewRepository].
 class ReviewViewModel extends BaseViewModel {
-  final ReviewRepository _repository;
-
+  /// Creates a [ReviewViewModel] backed by [repository].
   ReviewViewModel(this._repository);
 
+  /// Repository used to perform review operations.
+  final ReviewRepository _repository;
+
   ReviewSummary _summary = const ReviewSummary();
+  /// Rating summary for reviews received by the current user.
   ReviewSummary get summary => _summary;
 
   final List<ReviewModel> _received = [];
+  /// Reviews received by the current user.
   List<ReviewModel> get received => _received;
 
   final Set<int> _reviewedLoanIds = {};
+  /// IDs of loans the user has already reviewed.
   Set<int> get reviewedLoanIds => _reviewedLoanIds;
 
   String? _actionError;
+  /// Error from the last review action, if any.
   String? get actionError => _actionError;
 
   /// Loads reviews received by the current user.
@@ -47,7 +56,9 @@ class ReviewViewModel extends BaseViewModel {
     }
   }
 
-  /// Creates a new review.
+  /// Creates a new review for a completed loan.
+  ///
+  /// Returns `true` on success, `false` on failure.
   Future<bool> createReview({
     required int loanId,
     required int rating,

@@ -3,31 +3,34 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../../core/constants/app_static.dart';
-import '../../widgets/app_widgets.dart';
-import '../../viewmodels/account_viewmodel.dart';
-import '../../viewmodels/auth_viewmodel.dart';
-import '../../viewmodels/fingerprint_viewmodel.dart';
-import '../../viewmodels/item_viewmodel.dart';
-import '../../viewmodels/loan_viewmodel.dart';
-import '../../viewmodels/notification_viewmodel.dart';
-import '../../viewmodels/request_viewmodel.dart';
-import '../../viewmodels/review_viewmodel.dart';
-import '../../viewmodels/group_viewmodel.dart';
-import '../../viewmodels/calendar_viewmodel.dart';
-import '../../utils/notification_generator.dart';
-import '../../routes/app_routes.dart';
-import '../items/add_item_screen.dart';
-import '../items/all_items_screen.dart';
-import '../items/item_details_screen.dart';
-import '../loans/loans_screen.dart';
-import '../requests/requests_screen.dart';
-import '../profile/profile_screen.dart';
-import '../notifications/notifications_screen.dart';
-import '../calendar/calendar_screen.dart';
+import '../../core/constants/colors.dart';
+import '../../core/constants/app_static.dart';
+import '../widgets/app_widgets.dart';
+import '../viewmodels/account_viewmodel.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/fingerprint_viewmodel.dart';
+import '../viewmodels/item_viewmodel.dart';
+import '../viewmodels/loan_viewmodel.dart';
+import '../viewmodels/notification_viewmodel.dart';
+import '../viewmodels/request_viewmodel.dart';
+import '../viewmodels/review_viewmodel.dart';
+import '../viewmodels/group_viewmodel.dart';
+import '../utils/notification_generator.dart';
+import '../routes/app_routes.dart';
+import './add_item_screen.dart';
+import './all_items_screen.dart';
+import './item_details_screen.dart';
+import './loans_screen.dart';
+import './requests_screen.dart';
+import './profile_screen.dart';
+import './notifications_screen.dart';
+import './conversation_list_screen.dart';
 
-/// Main screen with bottom navigation bar (Home / Requests / Loans / Profile).
+/// Main screen with bottom navigation bar (Home / Requests / Loans / Chat / Profile).
+///
+/// Coordinates data loading across all tabs and hosts the tab views in an
+/// [IndexedStack] driven by [AppNav.tabIndex]. A floating [Add Item] button
+/// sits between Requests and Loans.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -95,36 +98,12 @@ class _HomeScreenState extends State<HomeScreen> {
         context.read<ReviewViewModel>().loadGiven();
         break;
       case 3:
-        _refreshCalendar();
-        break;
-      case 4:
-        _refreshNotifications();
-        break;
-      case 5:
         context.read<LoanViewModel>().load();
         context.read<ItemViewModel>().loadMine();
         context.read<ReviewViewModel>().loadReceived();
         context.read<GroupViewModel>().load();
         break;
     }
-  }
-
-  // Reloads the calendar events from the latest loans.
-  Future<void> _refreshCalendar() async {
-    final loans = context.read<LoanViewModel>();
-    await loans.load();
-    if (!mounted) return;
-    context.read<CalendarViewModel>().load(loans.borrowing, loans.lending);
-  }
-
-  // Reloads requests/loans and regenerates local notifications.
-  Future<void> _refreshNotifications() async {
-    final requests = context.read<RequestViewModel>();
-    final loans = context.read<LoanViewModel>();
-    final notifications = context.read<NotificationViewModel>();
-    await Future.wait([requests.load(), loans.load(), notifications.load()]);
-    if (!mounted) return;
-    await _syncNotifications();
   }
 
   // Generates notifications from the current requests/loans and merges them.
@@ -151,8 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
           HomeTab(),
           RequestsScreen(),
           LoansScreen(),
-          CalendarScreen(),
-          NotificationsScreen(),
+          ConversationListPage(),
           ProfileScreen(),
         ],
       ),
@@ -163,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: NavigationBar(
           selectedIndex: index,
           onDestinationSelected: (i) => AppNav.tabIndex.value = i,
-destinations: const [
+          destinations: const [
             NavigationDestination(
               icon: Icon(Icons.home_outlined),
               selectedIcon: Icon(Icons.home),
@@ -174,16 +152,14 @@ destinations: const [
               selectedIcon: Icon(Icons.inbox),
               label: 'Requests',
             ),
-            NavigationDestination(icon: Icon(Icons.repeat), label: 'Loans'),
             NavigationDestination(
-              icon: Icon(Icons.calendar_today_outlined),
-              selectedIcon: Icon(Icons.calendar_today),
-              label: 'Calendar',
+              icon: Icon(Icons.repeat),
+              label: 'Loans',
             ),
             NavigationDestination(
-              icon: Icon(Icons.notifications_none),
-              selectedIcon: Icon(Icons.notifications),
-              label: 'Alerts',
+              icon: Icon(Icons.chat_bubble_outline),
+              selectedIcon: Icon(Icons.chat_bubble),
+              label: 'Chat',
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outline),
@@ -193,6 +169,14 @@ destinations: const [
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AddItemScreen()),
+        ),
+        child: const Icon(Icons.add),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }
@@ -228,8 +212,10 @@ class _HomeTabState extends State<HomeTab> {
   Widget build(BuildContext context) {
     final itemViewModel = context.watch<ItemViewModel>();
     final authViewModel = context.watch<AuthViewModel>();
+    final notifications = context.watch<NotificationViewModel>();
     final firstName = (authViewModel.user?.fullName ?? '').trim().split(' ').first;
     final items = itemViewModel.visibleItems;
+    final unreadCount = notifications.unreadCount;
     const tabs = ['all', 'peer', 'group'];
 
     return SafeArea(
@@ -259,12 +245,42 @@ class _HomeTabState extends State<HomeTab> {
                             ),
                           ),
                         ),
-                        SquareIconButton(
-                          icon: Icons.notifications_none,
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                          ),
+                        Stack(
+                          children: [
+                            SquareIconButton(
+                              icon: Icons.notifications_none,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const NotificationsScreen()),
+                              ),
+                            ),
+                            if (unreadCount > 0)
+                              Positioned(
+                                right: 6,
+                                top: 6,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.error,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 16,
+                                    minHeight: 16,
+                                  ),
+                                  child: Text(
+                                    unreadCount.toString(),
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                         const SizedBox(width: 10),
                         SquareIconButton(
@@ -277,7 +293,7 @@ class _HomeTabState extends State<HomeTab> {
                       ],
                     ),
                     const SizedBox(height: 6),
-                    // University + "List an item"
+                    // University
                     Row(
                       children: [
                         const Icon(
@@ -288,7 +304,8 @@ class _HomeTabState extends State<HomeTab> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            AppStatic.universityOf(authViewModel.user?.email ?? ''),
+                            AppStatic.universityOf(
+                                authViewModel.user?.email ?? ''),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -296,13 +313,6 @@ class _HomeTabState extends State<HomeTab> {
                               fontSize: 16,
                             ),
                           ),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const AddItemScreen()),
-                          ),
-                          child: const Text('+ List an item'),
                         ),
                       ],
                     ),
@@ -314,7 +324,8 @@ class _HomeTabState extends State<HomeTab> {
                       textInputAction: TextInputAction.search,
                       decoration: InputDecoration(
                         hintText: 'What do you need for campus?',
-                        prefixIcon: const Icon(Icons.search, color: AppColors.textGrey),
+                        prefixIcon: const Icon(Icons.search,
+                            color: AppColors.textGrey),
                         suffixIcon: IconButton(
                           icon: Icon(
                             Icons.tune,
@@ -338,7 +349,8 @@ class _HomeTabState extends State<HomeTab> {
                       actionText: 'See all',
                       onAction: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const AllItemsScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const AllItemsScreen()),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -353,10 +365,13 @@ class _HomeTabState extends State<HomeTab> {
                 hasScrollBody: false,
                 child: Center(child: CircularProgressIndicator()),
               )
-            else if (itemViewModel.error != null && itemViewModel.items.isEmpty)
+            else if (itemViewModel.error != null &&
+                itemViewModel.items.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
-                child: ErrorState(message: itemViewModel.error!, onRetry: itemViewModel.load),
+                child: ErrorState(
+                    message: itemViewModel.error!,
+                    onRetry: itemViewModel.load),
               )
             else if (items.isEmpty)
               SliverFillRemaining(
@@ -370,7 +385,8 @@ class _HomeTabState extends State<HomeTab> {
                     child: ElevatedButton(
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const AddItemScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const AddItemScreen()),
                       ),
                       child: const Text('List an item'),
                     ),

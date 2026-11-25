@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../utils/format.dart';
-import '../../../core/constants/app_static.dart';
-import '../../widgets/app_widgets.dart';
-import '../../../data/models/loan_model.dart';
-import '../../viewmodels/auth_viewmodel.dart';
-import '../../viewmodels/conversation_viewmodel.dart';
-import '../../viewmodels/loan_viewmodel.dart';
-import '../../viewmodels/review_viewmodel.dart';
-import '../loans/handover_screen.dart';
-import '../loans/return_item_screen.dart';
-import '../reviews/review_screen.dart';
-import '../../utils/receipt_export_service.dart';
-import '../../routes/app_routes.dart';
+import '../../core/constants/colors.dart';
+import '../utils/format.dart';
+import '../../core/constants/app_static.dart';
+import '../widgets/app_widgets.dart';
+import '../../data/models/loan_model.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/conversation_viewmodel.dart';
+import '../viewmodels/loan_viewmodel.dart';
+import '../viewmodels/review_viewmodel.dart';
+import './handover_screen.dart';
+import './return_item_screen.dart';
+import './review_screen.dart';
+import '../utils/receipt_export_service.dart';
+import '../routes/app_routes.dart';
 
 /// "Active loans" screen.
 class LoansScreen extends StatefulWidget {
@@ -123,7 +123,7 @@ class _LoansScreenState extends State<LoansScreen> {
                           ],
                         ),
                       ),
-          ),
+                    ),
         ],
       ),
     );
@@ -169,7 +169,6 @@ class LoanCard extends StatelessWidget {
 
   bool get _iAmOwner => loan.ownerId == myId;
 
-  // text + color for the chip in the top right corner
   (String, String) get _chip {
     switch (loan.stage) {
       case 'awaiting_handover':
@@ -400,7 +399,7 @@ class LoanCard extends StatelessWidget {
                     itemId: loan.itemId?.toString(),
                   );
                   if (conv == null) return;
-                  Navigator.pushNamed(context, AppRoutes.chat, arguments: conv.id);
+                  Navigator.pushNamed(context, AppRoutes.chat, arguments: conv);
                 },
                 icon: const Icon(Icons.message, size: 18),
                 label: const Text('Message'),

@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../utils/format.dart';
-import '../../../core/constants/app_static.dart';
-import '../../widgets/app_widgets.dart';
-import '../../../data/models/item_model.dart';
-import '../../viewmodels/request_viewmodel.dart';
+import '../../core/constants/colors.dart';
+import '../utils/format.dart';
+import '../../core/constants/app_static.dart';
+import '../widgets/app_widgets.dart';
+import '../../data/models/item_model.dart';
+import '../viewmodels/request_viewmodel.dart';
 
 /// Screen for creating a borrow request for an item.
 class MakeRequestScreen extends StatefulWidget {
+  /// The item being requested.
   final ItemModel item;
   const MakeRequestScreen({super.key, required this.item});
 

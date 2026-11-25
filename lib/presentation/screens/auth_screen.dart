@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/colors.dart';
-import '../../utils/validators.dart';
-import '../../widgets/app_widgets.dart';
-import '../../viewmodels/auth_viewmodel.dart';
-import '../../viewmodels/fingerprint_viewmodel.dart';
-import '../home/home_screen.dart';
+import '../../core/constants/colors.dart';
+import '../utils/validators.dart';
+import '../widgets/app_widgets.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/fingerprint_viewmodel.dart';
+import './home_screen.dart';
 
 /// Login + Register screen (the "Log in | Sign up" tabs from the Figma).
 class AuthScreen extends StatefulWidget {
+  /// Whether to start on the sign-up tab.
   final bool startOnSignUp;
   const AuthScreen({super.key, this.startOnSignUp = false});
 
@@ -300,6 +301,7 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 }
 
+/// Password reset screen. Informs the user that reset requires backend support.
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 

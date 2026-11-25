@@ -1,0 +1,129 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../../data/models/conversation_model.dart';
+import '../../../data/services/chat_service.dart';
+import '../../../core/constants/colors.dart';
+import '../../routes/app_routes.dart';
+import '../../viewmodels/auth_viewmodel.dart';
+import '../../viewmodels/chat_viewmodel.dart';
+import '../../widgets/app_widgets.dart';
+import '../../widgets/chat_input_field.dart';
+import '../../widgets/message_bubble.dart';
+
+/// The chat page for one conversation: message list + input field.
+///
+/// The route argument is the [ConversationModel]. The page scopes a
+/// [ChatViewModel] to this conversation and never calls Firestore directly.
+class ChatPage extends StatelessWidget {
+  /// Creates a [ChatPage] with an optional [key].
+  const ChatPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final conversation =
+        ModalRoute.of(context)!.settings.arguments as ConversationModel;
+    final auth = context.read<AuthViewModel>();
+    final currentUid = auth.user?.id.toString() ?? '';
+    final partnerName = conversation.otherParticipantName(currentUid);
+
+    return ChangeNotifierProvider(
+      create: (_) => ChatViewModel(
+        chatService: context.read<ChatService>(),
+        conversationId: conversation.id,
+        currentUid: currentUid,
+        otherUid: conversation.otherParticipantId(currentUid),
+        otherName: conversation.otherParticipantName(currentUid),
+      ),
+      child: _ChatPageBody(conversation: conversation, partner: partnerName),
+    );
+  }
+}
+
+class _ChatPageBody extends StatefulWidget {
+  /// Creates a [_ChatPageBody] showing [conversation] with [partner] name.
+  const _ChatPageBody({
+    required this.conversation,
+    required this.partner,
+  });
+
+  final ConversationModel conversation;
+  final String partner;
+
+  @override
+  State<_ChatPageBody> createState() => _ChatPageBodyState();
+}
+
+class _ChatPageBodyState extends State<_ChatPageBody> {
+  final _scroll = ScrollController();
+  final _controller = TextEditingController();
+  bool _scrollToBottom = true;
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<ChatViewModel>().load();
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    _controller.dispose();
+    context.read<ChatViewModel>().dispose();
+    super.dispose();
+  }
+
+  void _scrollBottom() {
+    _scroll.jumpTo(_scroll.position.maxScrollExtent);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<ChatViewModel>();
+    final meId = context.read<AuthViewModel>().user?.id.toString() ?? '';
+
+    if (_scrollToBottom && vm.messages.isNotEmpty) {
+      _scrollToBottom = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollBottom());
+    }
+
+    return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(68),
+        child: ScreenHeader(title: widget.partner),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: vm.isLoading && vm.messages.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    controller: _scroll,
+                    reverse: false,
+                    itemCount: vm.messages.length,
+                    itemBuilder: (context, i) => MessageBubble(
+                      message: vm.messages[i],
+                      isMine: vm.messages[i].isSentBy(meId),
+                    ),
+                  ),
+          ),
+          if (vm.error != null)
+            Container(
+              padding: const EdgeInsets.all(8),
+              alignment: Alignment.center,
+              child: Text(
+                vm.error!,
+                style: TextStyle(color: AppColors.error, fontSize: 13),
+              ),
+            ),
+          ChatInputField(
+            onSend: (text) async {
+              _controller.clear();
+              await context.read<ChatViewModel>().sendMessage(text);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}

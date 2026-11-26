@@ -24,7 +24,7 @@ class AccountRepositoryImpl implements AccountRepository {
   @override
   Future<String> themeMode() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_themeKey) ?? 'system';
+    return prefs.getString(_themeKey) ?? 'light';
   }
 
   @override

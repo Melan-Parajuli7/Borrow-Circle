@@ -12,17 +12,20 @@ import '../utils/validators.dart';
 import '../widgets/app_widgets.dart';
 import '../../data/models/user_model.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/conversation_viewmodel.dart';
 import '../viewmodels/group_viewmodel.dart';
 import '../viewmodels/item_viewmodel.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import '../viewmodels/review_viewmodel.dart';
+import '../viewmodels/task_viewmodel.dart';
+import '../routes/app_routes.dart';
 import './account_screen.dart';
 import './calendar_screen.dart';
-import './conversation_list_screen.dart';
 import './groups_screen.dart';
 import './my_listings_screen.dart';
 import './loans_screen.dart';
 import './notifications_screen.dart';
+import './tasks_screen.dart';
 
 // =====================================================================
 //  PROFILE SCREEN
@@ -96,20 +99,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _GuidelineTile(
                   icon: Icons.qr_code_2,
                   title: 'Secure handover',
-                  text:
-                      'The borrower shows the 6-digit code or QR; the owner confirms it.',
+                  text: 'The borrower shows the 6-digit code or QR; the owner confirms it.',
                 ),
                 _GuidelineTile(
                   icon: Icons.assignment_turned_in_outlined,
                   title: 'Return and review',
-                  text:
-                      'The owner confirms the return, then both members can leave a review.',
+                  text: 'The owner confirms the return, then both members can leave a review.',
                 ),
                 _GuidelineTile(
                   icon: Icons.cleaning_services_outlined,
                   title: 'Care for shared items',
-                  text:
-                      'Return equipment clean, complete, and in the same condition.',
+                  text: 'Return equipment clean, complete, and in the same condition.',
                 ),
               ],
             ),
@@ -125,6 +125,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<void> _contactAdmin() async {
+    final vm = context.read<ConversationViewModel>();
+    final conversation = await vm.startAdminConversation();
+    if (!mounted) return;
+    if (conversation == null) {
+      showSnack(
+        context,
+        vm.error ?? 'Could not open admin support',
+        isError: true,
+      );
+      return;
+    }
+    Navigator.pushNamed(context, AppRoutes.chat, arguments: conversation);
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthViewModel>().user;
@@ -132,6 +147,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final items = context.watch<ItemViewModel>();
     final reviews = context.watch<ReviewViewModel>();
     final groups = context.watch<GroupViewModel>();
+    final tasks = context.watch<TaskViewModel>();
 
     if (user == null) return const SizedBox.shrink();
 
@@ -157,14 +173,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.chat_bubble_outline, color: AppColors.primary),
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ConversationListPage()),
-                  ),
-                  tooltip: 'Messages',
-                ),
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert, color: AppColors.primary),
                   onSelected: (v) {
@@ -231,38 +239,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   child: Row(
                     children: [
-                      _Stat(value: '${items.myTotal}', label: 'Listings'),
-                      Transform.rotate(
-                        angle: 0.1,
-                        child: Container(
-                          width: 1,
-                          height: 32,
-                          color: AppColors.border,
-                        ),
+                      _Stat(
+                        value: '${items.myTotal}',
+                        label: 'Listings',
+                        color: AppColors.textDark,
                       ),
-                      _Stat(value: '${loans.completedCount}', label: 'Loans'),
-                      Transform.rotate(
-                        angle: 0.1,
-                        child: Container(
-                          width: 1,
-                          height: 32,
-                          color: AppColors.border,
-                        ),
+                      Container(width: 1, height: 48, color: AppColors.border),
+                      _Stat(
+                        value: '${loans.completedCount}',
+                        label: 'Loans',
+                        color: AppColors.secondary,
                       ),
-                      _Stat(value: '${reviews.summary.total}', label: 'Reviews'),
+                      Container(width: 1, height: 48, color: AppColors.border),
+                      _Stat(
+                        value: '${reviews.summary.total}',
+                        label: 'Reviews',
+                        color: AppColors.tertiary,
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 24),
-                AppCard(
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
                   child: Row(
                     children: [
                       const Icon(
                         Icons.verified,
                         color: AppColors.primary,
-                        size: 28,
+                        size: 38,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,11 +281,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Text(
                               trustTier,
                               style: const TextStyle(
+                                fontSize: 18,
                                 fontWeight: FontWeight.w800,
-                                fontSize: 16,
+                                color: AppColors.textDark,
                               ),
                             ),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 6),
                             Text(
                               '$completedCount verified loans · $rating',
                               style: const TextStyle(color: AppColors.textGrey),
@@ -285,8 +297,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                AppCard(
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
                   child: Row(
                     children: [
                       const Expanded(
@@ -296,7 +313,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           label: 'CO2 estimated saved',
                         ),
                       ),
-                      Container(width: 1, height: 52, color: AppColors.border),
+                      Container(height: 64, width: 1, color: AppColors.border),
                       Expanded(
                         child: _ImpactStat(
                           icon: Icons.savings_outlined,
@@ -307,7 +324,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
                 if (recentLoans.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   AppCard(
@@ -378,9 +395,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onTap: () => _open(context, const NotificationsScreen()),
                     ),
                     _MenuRow(
+                      icon: Icons.task_alt,
+                      title: 'My Tasks',
+                      trailing: '${tasks.taskCount} tasks',
+                      onTap: () => _open(context, const TasksScreen()),
+                    ),
+                    _MenuRow(
                       icon: Icons.settings_outlined,
                       title: 'Account settings',
-                      onTap: () => _open(context, const AccountSettingsScreen()),
+                      onTap: () =>
+                          _open(context, const AccountSettingsScreen()),
+                    ),
+                    _MenuRow(
+                      icon: Icons.support_agent_outlined,
+                      title: 'Contact admin',
+                      onTap: _contactAdmin,
                     ),
                     _MenuRow(
                       icon: Icons.help_outline,
@@ -410,7 +439,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 class _Stat extends StatelessWidget {
   final String value;
   final String label;
-  const _Stat({required this.value, required this.label});
+  final Color color;
+  const _Stat({required this.value, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -544,7 +574,7 @@ class _MenuRow extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(22),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           border: isLast
               ? null
@@ -635,10 +665,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     final auth = context.read<AuthViewModel>();
-    final ok = await auth.updateProfile(
-      _name.text,
-      avatarPath: _newAvatarPath,
-    );
+    final ok = await auth.updateProfile(_name.text, avatarPath: _newAvatarPath);
     if (!mounted) return;
     if (ok) {
       final preferences = await SharedPreferences.getInstance();
@@ -832,12 +859,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
       }).toList();
     }
     list.sort((a, b) => b.endDate.compareTo(a.endDate));
-    final years = list
-        .map((l) => Fmt.parseDay(l.endDate)?.year)
-        .whereType<int>()
-        .toSet()
-        .toList()
-      ..sort((a, b) => b.compareTo(a));
+    final years =
+        list
+            .map((l) => Fmt.parseDay(l.endDate)?.year)
+            .whereType<int>()
+            .toSet()
+            .toList()
+          ..sort((a, b) => b.compareTo(a));
 
     return Scaffold(
       body: SafeArea(
@@ -872,7 +900,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 ChoiceChip(
                                   label: Text('$year'),
                                   selected: _year == year,
-                                  onSelected: (_) => setState(() => _year = year),
+                                  onSelected: (_) =>
+                                      setState(() => _year = year),
                                 ),
                                 const SizedBox(width: 8),
                               ],
@@ -888,8 +917,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         ? const EmptyState(
                             icon: Icons.history,
                             title: 'Nothing here yet',
-                            message:
-                                'Items you borrowed and returned will show up here.',
+                            message: 'Items you borrowed and returned will show up here.',
                           )
                         : ListView.separated(
                             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),

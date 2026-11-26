@@ -58,4 +58,24 @@ class UserModel {
     if (parts.isEmpty) return '?';
     return parts.take(2).map((p) => p[0].toUpperCase()).join();
   }
+
+  /// Returns a copy of this [UserModel] with the given fields replaced.
+  ///
+  /// Any parameter left as `null` retains the existing value.
+  UserModel copyWith({
+    int? id,
+    String? fullName,
+    String? email,
+    String? role,
+    String? avatar,
+    DateTime? createdAt,
+  }) =>
+      UserModel(
+        id: id ?? this.id,
+        fullName: fullName ?? this.fullName,
+        email: email ?? this.email,
+        role: role ?? this.role,
+        avatar: avatar ?? this.avatar,
+        createdAt: createdAt ?? this.createdAt,
+      );
 }

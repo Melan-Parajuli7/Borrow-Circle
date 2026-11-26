@@ -23,6 +23,7 @@ import './profile_screen.dart';
 import './groups_screen.dart';
 import './my_listings_screen.dart';
 import './loans_screen.dart';
+import './map_screen.dart';
 import './notifications_screen.dart';
 
 // =====================================================================
@@ -38,30 +39,10 @@ class AccountSettingsScreen extends StatefulWidget {
     BuildContext context,
     AccountViewModel account,
   ) async {
-    final controller = TextEditingController(text: account.handoverSpot);
     final result = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Default handover spot'),
-        content: AppTextField(
-          controller: controller,
-          label: 'Campus location',
-          hint: 'e.g. Central Library North Desk',
-          maxLength: 120,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+      builder: (_) => _HandoverSpotDialog(initialSpot: account.handoverSpot),
     );
-    controller.dispose();
     if (result == null) return;
     await account.setHandoverSpot(result);
   }
@@ -100,6 +81,74 @@ class AccountSettingsScreen extends StatefulWidget {
 
   @override
   State<AccountSettingsScreen> createState() => _AccountSettingsScreenState();
+}
+
+class _HandoverSpotDialog extends StatefulWidget {
+  const _HandoverSpotDialog({required this.initialSpot});
+
+  final String initialSpot;
+
+  @override
+  State<_HandoverSpotDialog> createState() => _HandoverSpotDialogState();
+}
+
+class _HandoverSpotDialogState extends State<_HandoverSpotDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialSpot);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Default handover spot'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Choose a specific, public place on campus for safe handovers.',
+              style: TextStyle(color: AppColors.textGrey),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _controller,
+              maxLength: 120,
+              textCapitalization: TextCapitalization.sentences,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
+                labelText: 'Campus location',
+                hintText: 'e.g. Main library entrance',
+                prefixIcon: Icon(Icons.place_outlined),
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
 }
 
 class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
@@ -246,16 +295,28 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         icon: Icons.place_outlined,
                         title: 'Default handover spot',
                         subtitle: account.handoverSpot.isEmpty
-                            ? 'Not set'
+                            ? 'Choose a public meeting point'
                             : account.handoverSpot,
                         onTap: () => AccountSettingsScreen._editHandoverSpot(context, account),
+                      ),
+                      _SettingsRow(
+                        icon: Icons.map,
+                        title: 'Campus Map',
+                        subtitle: 'View campus map and handover locations',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const MapScreen()),
+                        ),
                       ),
                       _SettingsRow(
                         icon: Icons.palette_outlined,
                         title: 'Appearance',
                         subtitle:
                             '${account.themeMode[0].toUpperCase()}${account.themeMode.substring(1)} theme',
-                        onTap: () => AccountSettingsScreen._chooseTheme(context, account),
+                        onTap: () => AccountSettingsScreen._chooseTheme(
+                          context,
+                          account,
+                        ),
                       ),
                       _SettingsRow(
                         icon: Icons.image_outlined,

@@ -4,107 +4,85 @@ import '../../data/models/message_model.dart';
 import '../../data/services/chat_service.dart';
 import 'base_viewmodel.dart';
 
-/// ViewModel for a single conversation: its messages and sending messages.
-///
-/// Depends on [ChatService]; the page never calls Firestore directly.
-/// The ViewModel is scoped to one conversation page and should be disposed
-/// when the page is popped.
+/// ViewModel for a single conversation.
 class ChatViewModel extends BaseViewModel {
-  /// Creates a [ChatViewModel] for [conversationId].
-  ///
-  /// [currentUid] is the stringified ID of the local user; [otherUid] and
-  /// [otherName] identify the conversation partner.
   ChatViewModel({
-    required ChatService chatService,
+    required this.chatService,
     required this.conversationId,
     required this.currentUid,
     required this.otherUid,
     this.otherName = '',
-  }) : _chatService = chatService;
+  });
 
-  /// Firestore chat service.
-  final ChatService _chatService;
-
-  /// ID of this conversation.
-  final String conversationId;
-
-  /// Stringified ID of the local user.
+  final ChatService chatService;
+  final int conversationId;
   final String currentUid;
-
-  /// Stringified ID of the conversation partner.
   final String otherUid;
-
-  /// Display name of the conversation partner.
   final String otherName;
 
-  /// The conversation's messages, oldest first.
   final List<MessageModel> _messages = [];
-
-  /// The conversation's messages.
   List<MessageModel> get messages => _messages;
 
-  /// The partner's display name, falling back to their ID.
   String get partnerDisplayName => otherName.isNotEmpty ? otherName : otherUid;
 
-  /// Stream subscription to the messages stream, cancelled by [dispose].
-  StreamSubscription? _subscription;
+  Timer? _refreshTimer;
+  bool _isRefreshing = false;
+  bool _disposed = false;
 
-  /// Loads and observes the messages of this conversation.
   Future<void> load() async {
     setBusy(true);
+    await refresh();
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => refresh(),
+    );
+  }
+
+  Future<void> refresh() async {
+    if (_isRefreshing || _disposed) return;
+    _isRefreshing = true;
     try {
-      _subscription = _chatService.messagesStream(conversationId).listen((messages) {
-        _messages
-          ..clear()
-          ..addAll(messages);
-        notifyListeners();
-      });
-      await _chatService.markRead(
-        conversationId: conversationId,
-        currentUid: currentUid,
-      );
-      setBusy(false);
+      final messages = await chatService.messages(conversationId);
+      if (_disposed) return;
+      _messages
+        ..clear()
+        ..addAll(messages);
+      if (_messages.any(
+        (message) => !message.isRead && !message.isSentBy(currentUid),
+      )) {
+        await chatService.markRead(conversationId);
+      }
+      if (!_disposed) setBusy(false);
     } catch (error) {
-      setError(error.toString());
+      if (!_disposed) setError(error.toString());
+    } finally {
+      _isRefreshing = false;
     }
   }
 
-  /// Sends [text] to the conversation partner.
-  ///
-  /// Returns `true` when the message was written to Firestore; the stream
-  /// delivers it back into [messages].
   Future<bool> sendMessage(String text) async {
     final trimmed = text.trim();
-    if (trimmed.isEmpty) return false;
+    if (trimmed.isEmpty || _disposed) return false;
     setBusy(true);
     try {
-      await _chatService.sendMessage(
-        conversationId: conversationId,
-        senderId: currentUid,
-        recipientId: otherUid,
-        text: trimmed,
-      );
+      final message = await chatService.sendMessage(conversationId, trimmed);
+      if (_disposed) return false;
+      _messages.add(message);
       setBusy(false);
       return true;
     } catch (error) {
-      setError(error.toString());
-      setBusy(false);
+      if (!_disposed) setError(error.toString());
       return false;
     }
   }
 
-  /// Marks messages sent by the partner as read.
-  Future<void> markRead() async {
-    await _chatService.markRead(
-      conversationId: conversationId,
-      currentUid: currentUid,
-    );
-  }
+  Future<void> markRead() => chatService.markRead(conversationId);
 
-  /// Cancels the messages stream subscription.
+  @override
   void dispose() {
-    _subscription?.cancel();
-    _subscription = null;
-    _messages.clear();
+    _disposed = true;
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 }

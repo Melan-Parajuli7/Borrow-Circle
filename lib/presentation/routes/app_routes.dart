@@ -9,10 +9,12 @@ import '../screens/conversation_list_screen.dart';
 import '../screens/groups_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/loans_screen.dart';
+import '../screens/map_screen.dart';
 import '../screens/notifications_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/requests_screen.dart';
 import '../screens/splash_screen.dart';
+import '../screens/tasks_screen.dart';
 import '../screens/welcome_screen.dart';
 
 /// Central definition of the app's named routes.
@@ -66,6 +68,12 @@ class AppRoutes {
   /// My requests screen.
   static const String requests = '/requests';
 
+  /// Map screen (Google Maps integration).
+  static const String map = '/map';
+
+  /// My tasks screen (to-do list).
+  static const String tasks = '/tasks';
+
   /// Map of route names to their corresponding widget builders, suitable for
   /// passing directly to `MaterialApp.routes`.
   static Map<String, WidgetBuilder> get routes => {
@@ -81,7 +89,9 @@ class AppRoutes {
         groups: (_) => const GroupsScreen(),
         loans: (_) => const LoansScreen(),
         requests: (_) => const RequestsScreen(),
+        map: (_) => const MapScreen(),
         profile: (_) => const ProfileScreen(),
         addItem: (_) => const AddItemScreen(),
+        tasks: (_) => const TasksScreen(),
       };
 }

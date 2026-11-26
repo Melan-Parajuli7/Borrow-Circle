@@ -1,5 +1,8 @@
 # BorrowCircle Frontend — Refactor & Chat Plan
 
+> Historical note: the original Firestore chat plan below has been superseded.
+> The current chat frontend uses the authenticated REST API; see `INTEGRATION.md`.
+
 Target: `Borrow-Circle-Frontend` (`lib/`).
 Reference structure/style: `TODO-APP-PCPS/flutter_app` (MVVM, Provider, doc-comment style).
 Reference chat feature: `madpcpsgit2026` (Firestore conversations + messages).

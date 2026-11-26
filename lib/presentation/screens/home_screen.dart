@@ -16,7 +16,6 @@ import '../viewmodels/request_viewmodel.dart';
 import '../viewmodels/review_viewmodel.dart';
 import '../viewmodels/group_viewmodel.dart';
 import '../utils/notification_generator.dart';
-import '../routes/app_routes.dart';
 import './add_item_screen.dart';
 import './all_items_screen.dart';
 import './item_details_screen.dart';
@@ -24,13 +23,12 @@ import './loans_screen.dart';
 import './requests_screen.dart';
 import './profile_screen.dart';
 import './notifications_screen.dart';
-import './conversation_list_screen.dart';
 
-/// Main screen with bottom navigation bar (Home / Requests / Loans / Chat / Profile).
+/// Main screen with bottom navigation bar (Home / Requests / Loans / Profile).
 ///
 /// Coordinates data loading across all tabs and hosts the tab views in an
 /// [IndexedStack] driven by [AppNav.tabIndex]. A floating [Add Item] button
-/// sits between Requests and Loans.
+/// sits in the reserved center gap between Requests and Loans.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -120,6 +118,45 @@ class _HomeScreenState extends State<HomeScreen> {
     await notifications.mergeGenerated(generated);
   }
 
+  Widget _navigationItem({
+    required int index,
+    required IconData icon,
+    IconData? selectedIcon,
+    required String label,
+  }) {
+    final selected = AppNav.tabIndex.value == index;
+    return Expanded(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        child: InkWell(
+          onTap: () => AppNav.tabIndex.value = index,
+          child: SizedBox(
+            height: 72,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  selected ? (selectedIcon ?? icon) : icon,
+                  color: selected ? AppColors.primary : AppColors.textGrey,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: selected ? AppColors.primary : AppColors.textGrey,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final index = AppNav.tabIndex.value;
@@ -130,7 +167,6 @@ class _HomeScreenState extends State<HomeScreen> {
           HomeTab(),
           RequestsScreen(),
           LoansScreen(),
-          ConversationListPage(),
           ProfileScreen(),
         ],
       ),
@@ -138,35 +174,35 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: AppColors.border)),
         ),
-        child: NavigationBar(
-          selectedIndex: index,
-          onDestinationSelected: (i) => AppNav.tabIndex.value = i,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.inbox_outlined),
-              selectedIcon: Icon(Icons.inbox),
-              label: 'Requests',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.repeat),
-              label: 'Loans',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.chat_bubble_outline),
-              selectedIcon: Icon(Icons.chat_bubble),
-              label: 'Chat',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-          ],
+        child: BottomAppBar(
+          height: 72,
+          padding: EdgeInsets.zero,
+          shape: const CircularNotchedRectangle(),
+          notchMargin: 8,
+          child: Row(
+            children: [
+              _navigationItem(
+                index: 0,
+                icon: Icons.home_outlined,
+                selectedIcon: Icons.home,
+                label: 'Home',
+              ),
+              _navigationItem(
+                index: 1,
+                icon: Icons.inbox_outlined,
+                selectedIcon: Icons.inbox,
+                label: 'Requests',
+              ),
+              const SizedBox(width: 72),
+              _navigationItem(index: 2, icon: Icons.repeat, label: 'Loans'),
+              _navigationItem(
+                index: 3,
+                icon: Icons.person_outline,
+                selectedIcon: Icons.person,
+                label: 'Profile',
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -213,7 +249,10 @@ class _HomeTabState extends State<HomeTab> {
     final itemViewModel = context.watch<ItemViewModel>();
     final authViewModel = context.watch<AuthViewModel>();
     final notifications = context.watch<NotificationViewModel>();
-    final firstName = (authViewModel.user?.fullName ?? '').trim().split(' ').first;
+    final firstName = (authViewModel.user?.fullName ?? '')
+        .trim()
+        .split(' ')
+        .first;
     final items = itemViewModel.visibleItems;
     final unreadCount = notifications.unreadCount;
     const tabs = ['all', 'peer', 'group'];
@@ -252,7 +291,8 @@ class _HomeTabState extends State<HomeTab> {
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (_) => const NotificationsScreen()),
+                                  builder: (_) => const NotificationsScreen(),
+                                ),
                               ),
                             ),
                             if (unreadCount > 0)
@@ -282,14 +322,6 @@ class _HomeTabState extends State<HomeTab> {
                               ),
                           ],
                         ),
-                        const SizedBox(width: 10),
-                        SquareIconButton(
-                          icon: Icons.message_outlined,
-                          onTap: () => Navigator.pushNamed(
-                            context,
-                            AppRoutes.conversations,
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 6),
@@ -305,7 +337,8 @@ class _HomeTabState extends State<HomeTab> {
                         Expanded(
                           child: Text(
                             AppStatic.universityOf(
-                                authViewModel.user?.email ?? ''),
+                              authViewModel.user?.email ?? '',
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -324,8 +357,10 @@ class _HomeTabState extends State<HomeTab> {
                       textInputAction: TextInputAction.search,
                       decoration: InputDecoration(
                         hintText: 'What do you need for campus?',
-                        prefixIcon: const Icon(Icons.search,
-                            color: AppColors.textGrey),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: AppColors.textGrey,
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             Icons.tune,
@@ -350,7 +385,8 @@ class _HomeTabState extends State<HomeTab> {
                       onAction: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => const AllItemsScreen()),
+                          builder: (_) => const AllItemsScreen(),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -365,13 +401,13 @@ class _HomeTabState extends State<HomeTab> {
                 hasScrollBody: false,
                 child: Center(child: CircularProgressIndicator()),
               )
-            else if (itemViewModel.error != null &&
-                itemViewModel.items.isEmpty)
+            else if (itemViewModel.error != null && itemViewModel.items.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: ErrorState(
-                    message: itemViewModel.error!,
-                    onRetry: itemViewModel.load),
+                  message: itemViewModel.error!,
+                  onRetry: itemViewModel.load,
+                ),
               )
             else if (items.isEmpty)
               SliverFillRemaining(
@@ -386,7 +422,8 @@ class _HomeTabState extends State<HomeTab> {
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => const AddItemScreen()),
+                          builder: (_) => const AddItemScreen(),
+                        ),
                       ),
                       child: const Text('List an item'),
                     ),

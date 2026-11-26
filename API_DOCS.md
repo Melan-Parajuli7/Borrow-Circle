@@ -11,10 +11,6 @@ Validation errors may include an `errors` array.
 The Dart side maps HTTP status codes to typed exceptions (`FetchDataException`,
 `BadRequestException`, `UnauthorisedException`) via `core/network/api_client.dart`.
 
-> The chat endpoints below still exist on the Express backend, but the app's
-> conversation/chat feature now uses Firestore directly
-> (`data/services/chat_service.dart`). Backend API contract is unchanged.
-
 ---
 
 ## Auth
@@ -165,21 +161,47 @@ Leave a rating + review after a completed loan.
 
 ---
 
-## Chats (backend API — not used by the Flutter chat UI)
+## Chats
 
-### GET /chats/my
-Current user's conversations.
+Chat data is stored in PostgreSQL and accessed through the authenticated REST API.
 
-### GET /chats/:id/messages
-Messages of a conversation.
+### GET /chats?page=1&limit=20
+List the current user's conversations.
+
+**Success (200)** — `{ "success": true, "conversations": [...], "page": 1, "limit": 20, "total": 1, "totalPages": 1 }`
+
+Conversation fields include `id`, `participantId`, `participantName`,
+`participantAvatar`, `loanId`, `itemId`, `itemTitle`, `lastMessage`,
+`lastMessageAt`, and `unreadCount`.
+
+### POST /chats/loan/:loanId
+Get or create the loan conversation. Only the borrower and item owner may use
+this endpoint; chat is available while awaiting handover or while the loan is
+out (`on_loan` or `overdue`).
+
+**Success (201)** — `{ "success": true, "conversation": { ... } }`
+
+### POST /chats/admin
+Get or create a conversation with an admin.
+
+**Success (201)** — `{ "success": true, "conversation": { ... } }`
+
+### GET /chats/:id/messages?page=1&limit=50
+Get a page of messages in chronological order. Only conversation participants
+may access it.
+
+**Success (200)** — `{ "success": true, "messages": [...], "page": 1, "limit": 50, "total": 1, "totalPages": 1 }`
 
 ### POST /chats/:id/messages
-Send a message.
+Send a non-empty message of at most 5,000 characters.
 
-### POST /chats/:id/read
-Mark a conversation as read.
+**Body** — `{ "text": "Hello" }`
 
-Real-time chat in the app is powered by Firestore instead — see `INTEGRATION.md` and `data/services/chat_service.dart`.
+### PATCH /chats/:id/read
+Mark messages received from the other participant as read.
+
+### GET /chats/unread-count
+Return the current user's unread message count.
 
 ---
 

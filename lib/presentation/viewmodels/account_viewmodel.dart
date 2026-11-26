@@ -16,7 +16,7 @@ class AccountViewModel extends BaseViewModel {
   /// Whether notifications are enabled.
   bool get notificationsEnabled => _notificationsEnabled;
 
-  String _themeMode = 'system';
+  String _themeMode = 'light';
   /// Current theme mode: 'light', 'dark', or 'system'.
   String get themeMode => _themeMode;
 

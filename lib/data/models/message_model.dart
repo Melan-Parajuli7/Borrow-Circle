@@ -1,77 +1,46 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-/// A message inside a Firestore conversation.
-///
-/// Document path: `conversations/{conversationId}/messages/{messageId}`.
-///
-/// Fields:
-/// - `senderId`: stringified ID of the sender
-/// - `text`: message body
-/// - `sentAt`: timestamp when the message was sent
-/// - `isRead`: whether the recipient has read it
+/// A message returned by the BorrowCircle chat API.
 class MessageModel {
-  /// Creates a [MessageModel] with the given properties.
-  MessageModel({
+  const MessageModel({
     required this.id,
     required this.conversationId,
     required this.senderId,
     required this.text,
     required this.sentAt,
+    this.senderName = '',
+    this.senderAvatar,
     this.isRead = false,
   });
 
-  /// Firestore document ID.
-  final String id;
-
-  /// Conversation this message belongs to.
-  final String conversationId;
-
-  /// Stringified ID of the user who sent the message.
-  final String senderId;
-
-  /// Message body.
+  final int id;
+  final int conversationId;
+  final int senderId;
   final String text;
-
-  /// Timestamp when the message was sent.
   final DateTime sentAt;
-
-  /// Whether the message has been read by the recipient.
+  final String senderName;
+  final String? senderAvatar;
   final bool isRead;
 
-  /// Whether this message was sent by [uid].
-  bool isSentBy(String uid) => senderId == uid;
+  bool isSentBy(String userId) => senderId.toString() == userId;
 
-  /// Creates a [MessageModel] from a Firestore snapshot.
-  factory MessageModel.fromSnapshot(
-    DocumentSnapshot<Map<String, dynamic>> snapshot,
-  ) {
-    final data = snapshot.data() ?? <String, dynamic>{};
+  factory MessageModel.fromJson(Map<String, dynamic> json) {
+    dynamic field(String camelCase, String snakeCase) =>
+        json[camelCase] ?? json[snakeCase];
+    int number(dynamic value) =>
+        value is num ? value.toInt() : int.parse(value.toString());
+
     return MessageModel(
-      id: snapshot.id,
-      conversationId: (data['conversationId'] as String?) ?? '',
-      senderId: (data['senderId'] as String?) ?? '',
-      text: (data['text'] as String?) ?? '',
-      sentAt: (data['sentAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      isRead: (data['isRead'] as bool?) ?? false,
+      id: number(json['id']),
+      conversationId: number(field('conversationId', 'conversation_id')),
+      senderId: number(field('senderId', 'sender_id')),
+      text: json['text'] as String? ?? '',
+      sentAt:
+          DateTime.tryParse(
+            '${json['createdAt'] ?? json['created_at'] ?? json['sentAt']}',
+          ) ??
+          DateTime.now(),
+      senderName: field('senderName', 'sender_name') as String? ?? '',
+      senderAvatar: field('senderAvatar', 'sender_avatar') as String?,
+      isRead: (field('isRead', 'is_read') as bool?) ?? false,
     );
   }
-
-  /// Converts this [MessageModel] into a Firestore map.
-  Map<String, dynamic> toMap() => <String, dynamic>{
-        'conversationId': conversationId,
-        'senderId': senderId,
-        'text': text,
-        'sentAt': Timestamp.fromDate(sentAt),
-        'isRead': isRead,
-      };
-
-  /// Creates a copy with [isRead] updated.
-  MessageModel copyWithRead(bool isRead) => MessageModel(
-        id: id,
-        conversationId: conversationId,
-        senderId: senderId,
-        text: text,
-        sentAt: sentAt,
-        isRead: isRead,
-      );
 }

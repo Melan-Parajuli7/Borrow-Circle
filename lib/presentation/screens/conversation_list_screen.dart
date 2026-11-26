@@ -7,12 +7,12 @@ import '../viewmodels/conversation_viewmodel.dart';
 import '../widgets/app_widgets.dart';
 import '../widgets/conversation_tile.dart';
 
-/// The conversation list: the user's existing chats and a way to start one.
+/// The conversation list: the user's existing chats.
 ///
-/// Reached from the dashboard. Tapping a conversation opens the chat page;
-/// the floating action button starts a new conversation with another user.
+/// Tapping a conversation opens the chat page. New chats are started from a
+/// loan or the Contact admin entry in the profile.
 ///
-/// Observes [ConversationViewModel] and never calls Firestore directly.
+/// Observes [ConversationViewModel] and never calls the API directly.
 class ConversationListPage extends StatefulWidget {
   /// Creates a [ConversationListPage] with an optional [key].
   const ConversationListPage({super.key});
@@ -24,62 +24,13 @@ class ConversationListPage extends StatefulWidget {
 class _ConversationListPageState extends State<ConversationListPage> {
   bool _loaded = false;
 
-  /// Starts (or opens) a conversation with [otherUid] and navigates to it.
-  Future<void> _startConversation(String otherUid) async {
-    otherUid = otherUid.trim();
-    if (otherUid.isEmpty) return;
-    final vm = context.read<ConversationViewModel>();
-    final me = context.read<AuthViewModel>().user?.id.toString() ?? '';
-    if (vm.currentUid == null) {
-      await vm.load(me, context.read<AuthViewModel>().user?.fullName ?? '');
-    }
-    final conv = await vm.startConversation(otherUid);
-    if (!mounted || conv == null) return;
-    Navigator.pushNamed(context, AppRoutes.chat, arguments: conv);
-  }
-
-  /// Shows a dialog asking for the other user's ID, then starts the chat.
-  Future<void> _showStartConversationDialog() async {
-    final controller = TextEditingController();
-    final otherUid = await showDialog<String>(
-      context: context,
-      builder: (dialog) => AlertDialog(
-        title: const Text('Start conversation'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            hintText: "Other user's ID",
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialog),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              final text = controller.text.trim();
-              if (text.isNotEmpty) Navigator.pop(dialog, text);
-            },
-            child: const Text('Start'),
-          ),
-        ],
-      ),
-    );
-    if (!mounted || otherUid == null || otherUid.isEmpty) return;
-    await _startConversation(otherUid);
-  }
-
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthViewModel>();
     final meId = auth.user?.id.toString() ?? '';
-    final meName = auth.user?.fullName ?? '';
-
     if (!_loaded && meId.isNotEmpty) {
       _loaded = true;
-      context.read<ConversationViewModel>().load(meId, meName);
+      context.read<ConversationViewModel>().load(meId);
     }
 
     return Scaffold(
@@ -93,37 +44,34 @@ class _ConversationListPageState extends State<ConversationListPage> {
             return const Center(child: CircularProgressIndicator());
           }
           if (vm.error != null && vm.conversations.isEmpty) {
-            return ErrorState(
-              message: vm.error!,
-              onRetry: () => vm.load(meId, meName),
-            );
+            return ErrorState(message: vm.error!, onRetry: () => vm.refresh());
           }
           if (vm.conversations.isEmpty) {
             return const EmptyState(
               icon: Icons.chat_bubble_outline,
               title: 'No conversations yet',
-              message: 'Start a conversation from the list above, or message '
-                  'someone from their loans.',
+              message:
+                  'Message a lender or borrower from a loan, or contact '
+                  'an admin from your profile.',
             );
           }
-          return ListView.builder(
-            itemCount: vm.conversations.length,
-            itemBuilder: (context, i) => ConversationTile(
-              conversation: vm.conversations[i],
-              currentUid: meId,
-              onTap: () => Navigator.pushNamed(
-                context,
-                AppRoutes.chat,
-                arguments: vm.conversations[i],
+          return RefreshIndicator(
+            onRefresh: vm.refresh,
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: vm.conversations.length,
+              itemBuilder: (context, i) => ConversationTile(
+                conversation: vm.conversations[i],
+                currentUid: meId,
+                onTap: () => Navigator.pushNamed(
+                  context,
+                  AppRoutes.chat,
+                  arguments: vm.conversations[i],
+                ),
               ),
             ),
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'Start conversation',
-        onPressed: _showStartConversationDialog,
-        child: const Icon(Icons.message),
       ),
     );
   }

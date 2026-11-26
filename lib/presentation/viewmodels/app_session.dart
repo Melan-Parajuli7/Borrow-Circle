@@ -10,6 +10,7 @@ import 'group_viewmodel.dart';
 import 'item_viewmodel.dart';
 import 'loan_viewmodel.dart';
 import 'notification_viewmodel.dart';
+import 'task_viewmodel.dart';
 import 'request_viewmodel.dart';
 import 'review_viewmodel.dart';
 
@@ -33,6 +34,7 @@ class AppSession {
     final groups = context.read<GroupViewModel>();
     final notifications = context.read<NotificationViewModel>();
     final calendar = context.read<CalendarViewModel>();
+    final tasks = context.read<TaskViewModel>();
 
     await auth.logout();
     account.reset();
@@ -43,6 +45,7 @@ class AppSession {
     groups.reset();
     notifications.reset();
     calendar.reset();
+    tasks.reset();
     AppNav.tabIndex.value = 0;
 
     nav.pushAndRemoveUntil(

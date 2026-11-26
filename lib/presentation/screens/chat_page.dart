@@ -13,7 +13,7 @@ import '../widgets/message_bubble.dart';
 /// The chat page for one conversation: message list + input field.
 ///
 /// The route argument is the [ConversationModel]. The page scopes a
-/// [ChatViewModel] to this conversation and never calls Firestore directly.
+/// [ChatViewModel] to this conversation and never calls the API directly.
 class ChatPage extends StatefulWidget {
   /// Creates a [ChatPage] with an optional [key].
   const ChatPage({super.key});
@@ -46,10 +46,7 @@ class _ChatPageState extends State<ChatPage> {
 
 class _ChatPageBody extends StatefulWidget {
   /// Creates a [_ChatPageBody] showing [conversation] with [partner] name.
-  const _ChatPageBody({
-    required this.conversation,
-    required this.partner,
-  });
+  const _ChatPageBody({required this.conversation, required this.partner});
 
   final ConversationModel conversation;
   final String partner;
@@ -60,8 +57,7 @@ class _ChatPageBody extends StatefulWidget {
 
 class _ChatPageBodyState extends State<_ChatPageBody> {
   final _scroll = ScrollController();
-  final _controller = TextEditingController();
-  bool _scrollToBottom = true;
+  var _renderedMessageCount = -1;
 
   @override
   void initState() {
@@ -72,13 +68,17 @@ class _ChatPageBodyState extends State<_ChatPageBody> {
   @override
   void dispose() {
     _scroll.dispose();
-    _controller.dispose();
-    context.read<ChatViewModel>().dispose();
     super.dispose();
   }
 
   void _scrollBottom() {
-    _scroll.jumpTo(_scroll.position.maxScrollExtent);
+    if (_scroll.hasClients) {
+      _scroll.animateTo(
+        _scroll.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   @override
@@ -86,8 +86,8 @@ class _ChatPageBodyState extends State<_ChatPageBody> {
     final vm = context.watch<ChatViewModel>();
     final meId = context.read<AuthViewModel>().user?.id.toString() ?? '';
 
-    if (_scrollToBottom && vm.messages.isNotEmpty) {
-      _scrollToBottom = false;
+    if (_renderedMessageCount != vm.messages.length && vm.messages.isNotEmpty) {
+      _renderedMessageCount = vm.messages.length;
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollBottom());
     }
 
@@ -120,12 +120,7 @@ class _ChatPageBodyState extends State<_ChatPageBody> {
                 style: TextStyle(color: AppColors.error, fontSize: 13),
               ),
             ),
-          ChatInputField(
-            onSend: (text) async {
-              _controller.clear();
-              await context.read<ChatViewModel>().sendMessage(text);
-            },
-          ),
+          ChatInputField(onSend: context.read<ChatViewModel>().sendMessage),
         ],
       ),
     );

@@ -26,6 +26,13 @@ class AppColors {
   static const textDark = Color(0xFF052927); // "Primary darker" - used for titles
   static const textGrey = Color(0xFF5F7370);
 
+  // Dark mode variants
+  static const backgroundDark = Color(0xFF0B1916);
+  static const surfaceDark = Color(0xFF122420);
+  static const borderDark = Color(0xFF243E38);
+  static const textLight = Colors.white;
+  static const textMutedDark = Color(0xFF9CB4AE);
+
   static const error = Color(0xFFDC2626);
   static const errorLight = Color(0xFFFDECEC);
 

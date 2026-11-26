@@ -39,25 +39,48 @@ import 'package:borrowcircle/presentation/viewmodels/request_viewmodel.dart';
 import 'package:borrowcircle/presentation/viewmodels/review_viewmodel.dart';
 
 void main() {
-  testWidgets('App boots and shows the splash screen',
-      (WidgetTester tester) async {
+  testWidgets('App boots and shows the splash screen', (
+    WidgetTester tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
-    final apiClient = ApiClient(http.Client());
+    final prefs = await SharedPreferences.getInstance();
+    final apiClient = ApiClient(http.Client(), prefs);
+    final account = AccountViewModel(AccountRepositoryImpl());
 
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => AuthViewModel(AuthRepositoryImpl(apiClient))),
-          ChangeNotifierProvider(create: (_) => AccountViewModel(AccountRepositoryImpl())),
-          ChangeNotifierProvider(create: (_) => FingerprintViewModel(FingerprintRepositoryImpl())),
-          ChangeNotifierProvider(create: (_) => CalendarViewModel(CalendarRepositoryImpl())),
-          ChangeNotifierProvider(create: (_) => NotificationViewModel(NotificationRepositoryImpl())),
-          ChangeNotifierProvider(create: (_) => PasswordViewModel(PasswordRepositoryImpl())),
-          ChangeNotifierProvider(create: (_) => ItemViewModel(ItemRepositoryImpl(apiClient))),
-          ChangeNotifierProvider(create: (_) => RequestViewModel(RequestRepositoryImpl(apiClient))),
-          ChangeNotifierProvider(create: (_) => LoanViewModel(LoanRepositoryImpl(apiClient))),
-          ChangeNotifierProvider(create: (_) => ReviewViewModel(ReviewRepositoryImpl(apiClient))),
-          ChangeNotifierProvider(create: (_) => GroupViewModel(GroupRepositoryImpl(apiClient))),
+          ChangeNotifierProvider(
+            create: (_) => AuthViewModel(AuthRepositoryImpl(apiClient, prefs)),
+          ),
+          ChangeNotifierProvider.value(value: account),
+          ChangeNotifierProvider(
+            create: (_) => FingerprintViewModel(FingerprintRepositoryImpl()),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => CalendarViewModel(CalendarRepositoryImpl()),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => NotificationViewModel(NotificationRepositoryImpl()),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => PasswordViewModel(PasswordRepositoryImpl()),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => ItemViewModel(ItemRepositoryImpl(apiClient)),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => RequestViewModel(RequestRepositoryImpl(apiClient)),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => LoanViewModel(LoanRepositoryImpl(apiClient)),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => ReviewViewModel(ReviewRepositoryImpl(apiClient)),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => GroupViewModel(GroupRepositoryImpl(apiClient)),
+          ),
         ],
         child: const BorrowCircleApp(),
       ),
@@ -73,5 +96,9 @@ void main() {
     // (no stored session) so no timer is left pending.
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pumpAndSettle();
+
+    await account.setHandoverSpot('Main Library');
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
   });
 }

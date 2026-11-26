@@ -58,7 +58,7 @@ the UI.
 5. Repository parses JSON into `ItemModel` (wrapped in `Paged` for lists).
 6. ViewModel sets `isLoading = false`, notifies listeners → UI rebuilds.
 
-The View never talks to the network or Firestore directly — it only observes
+The View never talks to the network directly — it only observes
 the ViewModel and triggers actions.
 
 ---
@@ -112,31 +112,25 @@ Example errors the user sees: "Invalid email or password", "Item not found",
 
 ---
 
-## 7. Chat (Firestore)
-
-Unlike the other features, chat does **not** call the Express API:
+## 7. Chat (REST API)
 
 ```
 ConversationListPage / ChatPage (View)
-      │ listens to / calls
+      │ observes / calls
       ▼
 ConversationViewModel / ChatViewModel (ChangeNotifier)
       │ calls
       ▼
-ChatService ─────────────────────────────▶ Firestore
-                                          conversations/{id}
-/messages/{id}
+ChatService ──▶ ApiClient ──▶ Express /api/chats
 ```
 
-- `data/services/chat_service.dart` is Firestore-only; pages never call
-  Firestore directly.
-- `conversations/{conversationId}`: `participantIds`, `participantNames`,
-  `lastMessage`, `lastMessageAt`, `itemId`.
-- `conversations/{conversationId}/messages/{messageId}`: `senderId`, `text`,
-  `sentAt`, `isRead`.
-- Firebase is initialised in `lib/main.dart` using
-  `lib/firebase_options.dart`; `android/app/google-services.json` is present
-  (project `borrowcircle-84813`).
+- Conversations are fetched from `/api/chats`; message history and sends use
+  `/api/chats/:id/messages`, and incoming messages are marked read with
+  `PATCH /api/chats/:id/read`.
+- The app polls for conversation and message updates because chat is not using
+  a WebSocket connection.
+- Start chats from a loan during handover/active-loan stages, or use
+  **Contact admin** from the profile.
 
 ---
 
@@ -155,7 +149,8 @@ flutter run      # ensure baseUrl matches the backend port
 ```
 
 Then register or log in (demo mode works without a backend), browse items,
-send requests, and open a conversation from the dashboard.
+send requests, and open a conversation from a loan or the profile's Contact
+admin entry.
 
 ---
 
@@ -163,14 +158,14 @@ send requests, and open a conversation from the dashboard.
 
 | File | Role |
 |------|------|
-| `lib/main.dart` | DI composition root + Firebase init |
+| `lib/main.dart` | Dependency-injection composition root |
 | `lib/app.dart` | MaterialApp + theme + routes |
 | `lib/core/constants/app_constants.dart` | API base URL + endpoints |
 | `lib/core/network/api_client.dart` | HTTP client + Bearer token + error mapping |
 | `lib/core/network/app_exception.dart` | Typed data-layer exceptions |
 | `lib/data/datasources/local/token_storage.dart` | SharedPreferences token persistence |
 | `lib/data/repositories/*_repository_impl.dart` | HTTP API implementations per feature |
-| `lib/data/services/chat_service.dart` | Firestore chat service |
+| `lib/data/services/chat_service.dart` | REST chat service |
 | `lib/presentation/viewmodels/*_viewmodel.dart` | UI state and actions |
 | `lib/presentation/screens/*` | Pages (observe ViewModels only) |
 | `lib/presentation/routes/app_routes.dart` | Named route table |

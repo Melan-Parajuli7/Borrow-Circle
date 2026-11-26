@@ -52,7 +52,9 @@ class _HandoverScreenState extends State<HandoverScreen> {
     if (!mounted) return;
     setState(() {
       _loan = loan;
-      _error = loan == null ? (loanViewModel.actionError ?? 'Could not load this loan') : null;
+      _error = loan == null
+          ? (loanViewModel.actionError ?? 'Could not load this loan')
+          : null;
       _loading = false;
     });
   }
@@ -71,7 +73,11 @@ class _HandoverScreenState extends State<HandoverScreen> {
       AppNav.tabIndex.value = 2;
       showSnack(context, 'Handover confirmed. The loan has started.');
     } else {
-      showSnack(context, loanViewModel.actionError ?? 'Wrong code', isError: true);
+      showSnack(
+        context,
+        loanViewModel.actionError ?? 'Wrong code',
+        isError: true,
+      );
     }
   }
 
@@ -107,8 +113,8 @@ class _HandoverScreenState extends State<HandoverScreen> {
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : (_error != null || loan == null)
-                      ? ErrorState(message: _error ?? 'Not found', onRetry: _load)
-                      : _body(loan, me == loan.ownerId, busy),
+                  ? ErrorState(message: _error ?? 'Not found', onRetry: _load)
+                  : _body(loan, me == loan.ownerId, busy),
             ),
           ],
         ),
@@ -127,41 +133,65 @@ class _HandoverScreenState extends State<HandoverScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                PillTag(text: 'Loan \u00b7 ${Fmt.loanCode(loan.id)}', icon: Icons.repeat),
+                PillTag(
+                  text: 'Loan \u00b7 ${Fmt.loanCode(loan.id)}',
+                  icon: Icons.repeat,
+                ),
                 const SizedBox(height: 14),
                 Text(
                   started
                       ? 'Handover done'
-                      : (isOwner ? 'Ready to hand it over?' : 'Ready for your next project?'),
-                  style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                      : (isOwner
+                            ? 'Ready to hand it over?'
+                            : 'Ready for your next project?'),
+                  style: const TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textDark,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   started
                       ? 'This loan has already started.'
                       : (isOwner
-                          ? 'Meet ${loan.borrowerName}, check the item together, then enter the code they show you.'
-                          : 'Meet ${loan.ownerName} and check the item together before confirming.'),
-                  style: const TextStyle(fontSize: 16, height: 1.4, color: AppColors.textGrey),
+                            ? 'Meet ${loan.borrowerName}, check the item together, then enter the code they show you.'
+                            : 'Meet ${loan.ownerName} and check the item together before confirming.'),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    height: 1.4,
+                    color: AppColors.textGrey,
+                  ),
                 ),
                 const SizedBox(height: 16),
 
                 AppCard(
                   child: Row(
                     children: [
-                      NetImage(url: AppStatic.imageUrl(loan.itemImage), width: 76, height: 76, radius: 14),
+                      NetImage(
+                        url: AppStatic.imageUrl(loan.itemImage),
+                        width: 76,
+                        height: 76,
+                        radius: 14,
+                      ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(loan.itemTitle,
-                                style: const TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                            Text(
+                              loan.itemTitle,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textDark,
+                              ),
+                            ),
                             const SizedBox(height: 4),
                             Text(
-                                '${Fmt.range(loan.startDate, loan.endDate)} \u00b7 ${Fmt.daysText(Fmt.totalDays(loan.startDate, loan.endDate))}',
-                                style: const TextStyle(color: AppColors.textGrey)),
+                              '${Fmt.range(loan.startDate, loan.endDate)} \u00b7 ${Fmt.daysText(Fmt.totalDays(loan.startDate, loan.endDate))}',
+                              style: const TextStyle(color: AppColors.textGrey),
+                            ),
                           ],
                         ),
                       ),
@@ -196,15 +226,21 @@ class _HandoverScreenState extends State<HandoverScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
           child: started
-              ? PrimaryButton(text: 'Done', onPressed: () => Navigator.pop(context))
+              ? PrimaryButton(
+                  text: 'Done',
+                  onPressed: () => Navigator.pop(context),
+                )
               : isOwner
-                  ? PrimaryButton(
-                      text: 'Confirm handover',
-                      icon: Icons.check,
-                      isLoading: busy,
-                      onPressed: _checked ? _confirm : null,
-                    )
-                  : OutlinedButton(onPressed: _load, child: const Text('Refresh status')),
+              ? PrimaryButton(
+                  text: 'Confirm handover',
+                  icon: Icons.check,
+                  isLoading: busy,
+                  onPressed: _checked ? _confirm : null,
+                )
+              : OutlinedButton(
+                  onPressed: _load,
+                  child: const Text('Refresh status'),
+                ),
         ),
       ],
     );
@@ -215,11 +251,20 @@ class _HandoverScreenState extends State<HandoverScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(26)),
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(26),
+      ),
       child: Column(
         children: [
-          const Text('YOUR ONE-TIME HANDOVER CODE',
-              style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+          const Text(
+            'YOUR ONE-TIME HANDOVER CODE',
+            style: TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
+            ),
+          ),
           const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -230,9 +275,18 @@ class _HandoverScreenState extends State<HandoverScreen> {
                   height: 56,
                   width: 46,
                   alignment: Alignment.center,
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-                  child: Text(i < code.length ? code[i] : '-',
-                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    i < code.length ? code[i] : '-',
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textDark,
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -240,12 +294,22 @@ class _HandoverScreenState extends State<HandoverScreen> {
           if (code.length == 6)
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-              child: QrImageView(data: code, size: 140, padding: EdgeInsets.zero),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: QrImageView(
+                data: code,
+                size: 140,
+                padding: EdgeInsets.zero,
+              ),
             ),
           const SizedBox(height: 12),
-          Text('Show this code to ${loan.ownerName}.',
-              textAlign: TextAlign.center, style: const TextStyle(color: AppColors.primary)),
+          Text(
+            'Show this code to ${loan.ownerName}.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.primary),
+          ),
         ],
       ),
     );
@@ -255,15 +319,25 @@ class _HandoverScreenState extends State<HandoverScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Enter the borrower's 6-digit code",
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: AppColors.textDark)),
+        const Text(
+          "Enter the borrower's 6-digit code",
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 17,
+            color: AppColors.textDark,
+          ),
+        ),
         const SizedBox(height: 10),
         TextField(
           controller: _code,
           keyboardType: TextInputType.number,
           maxLength: 6,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 30, letterSpacing: 10, fontWeight: FontWeight.w800),
+          style: const TextStyle(
+            fontSize: 30,
+            letterSpacing: 10,
+            fontWeight: FontWeight.w800,
+          ),
           decoration: InputDecoration(
             hintText: '------',
             counterText: '',
@@ -288,31 +362,40 @@ class _HandoverScreenState extends State<HandoverScreen> {
               const Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(top: 12),
-                  child: Text('I handed over the complete item and checked that everything is in working condition.',
-                      style: TextStyle(fontSize: 15, height: 1.35)),
+                  child: Text(
+                    'I handed over the complete item and checked that everything is in working condition.',
+                    style: TextStyle(fontSize: 15, height: 1.35),
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        const Text('Only confirm after you gave the item. This starts the loan and records a safe handover.',
-            style: TextStyle(color: AppColors.textGrey)),
+        const Text(
+          'Only confirm after you gave the item. This starts the loan and records a safe handover.',
+          style: TextStyle(color: AppColors.textGrey),
+        ),
       ],
     );
   }
 
   Widget _row(String label, String value) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(color: AppColors.textGrey, fontSize: 16)),
-            Flexible(
-              child: Text(value,
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-            ),
-          ],
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(color: AppColors.textGrey, fontSize: 16),
         ),
-      );
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          ),
+        ),
+      ],
+    ),
+  );
 }

@@ -6,7 +6,7 @@ The frontend follows **MVVM architecture** (View ←→ ViewModel ←→ Reposit
 
 ```
 borrowcircle/
-├── android/             # Android project (google-services.json for Firebase)
+├── android/             # Android project
 ├── lib/
 │   ├── main.dart        # Entry point: DI (MultiProvider) + runApp
 │   ├── app.dart         # MaterialApp, theme, named routes
@@ -16,7 +16,7 @@ borrowcircle/
 │   ├── data/
 │   │   ├── models/      # item, loan, request, review, user, chat models...
 │   │   ├── repositories/# HTTP API repository implementations
-│   │   └── services/    # chat_service (Firestore only)
+│   │   └── services/    # chat_service (REST API)
 │   ├── presentation/
 │   │   ├── routes/      # app_routes
 │   │   ├── viewmodels/  # base_viewmodel + feature viewmodels
@@ -42,7 +42,7 @@ borrowcircle/
 - **Reviews**: Rate and review completed loans.
 - **Calendar**: Widget-based loan calendar (start/due dates) with "add to device calendar".
 - **Notifications**: Local notifications for requests, loans, and chat messages.
-- **Chat**: Firestore-based conversations and real-time messaging (`/conversations`, `/chat`).
+- **Chat**: Loan coordination and admin support conversations through the REST API.
 - **Appearance**: Light/dark/system theme persisted per user.
 
 ---
@@ -54,9 +54,9 @@ View (Screen)  →  ViewModel (ChangeNotifier)  →  Repository / Service  →  
 ```
 
 - `presentation/viewmodels/` — hold UI state (`isLoading`, `error`) and expose actions.
-- `presentation/screens/` — pages; they observe ViewModels via `Provider`/`Consumer` and never call the network or Firestore directly.
+- `presentation/screens/` — pages; they observe ViewModels via `Provider`/`Consumer` and never call the network directly.
 - `data/repositories/` — HTTP API implementations backed by `core/network/api_client.dart`.
-- `data/services/chat_service.dart` — Firestore-only service for chat.
+- `data/services/chat_service.dart` — REST service for conversations and messages.
 - State management: **Provider** (`ChangeNotifierProvider`, `MultiProvider`).
 
 ## Tech Stack
@@ -66,7 +66,7 @@ View (Screen)  →  ViewModel (ChangeNotifier)  →  Repository / Service  →  
 | Framework | Flutter (Dart SDK ^3.13.4) |
 | State management | Provider |
 | Networking | `http` (REST API, multipart uploads) |
-| Realtime chat | `firebase_core`, `cloud_firestore` (Firestore) |
+| Chat | REST API via `http` |
 | Local storage | `shared_preferences` |
 | Calendar | `table_calendar`, `add_2_calendar` |
 | Images/QR | `image_picker`, `qr_flutter` |
@@ -96,9 +96,12 @@ static const String baseUrl = 'http://10.0.2.2:5000';
 
 > `10.0.2.2` is the Android emulator's alias for the host machine's `localhost`.
 
-## Firebase (chat)
+## Chat
 
-`android/app/google-services.json` is already present (Firebase project `borrowcircle-84813`). Flutter-side configuration lives in `lib/firebase_options.dart` and Firebase is initialised in `lib/main.dart`. No Gradle, Kotlin, or Dart version changes were required.
+Chats use the authenticated backend endpoints documented in `API_DOCS.md`.
+Users can start a loan conversation from the handover or active-loan screen and
+contact admin support from their profile. The app polls for new messages; it
+does not use a WebSocket connection.
 
 ## Scripts
 

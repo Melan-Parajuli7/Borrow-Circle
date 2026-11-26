@@ -5,12 +5,13 @@ import '../../core/constants/colors.dart';
 /// Message input field with a send button.
 ///
 /// Calls [onSend] with the trimmed, non-empty text when the user sends.
+/// Keeps the text in the field if the send request fails.
 class ChatInputField extends StatefulWidget {
   /// Creates a [ChatInputField] that notifies [onSend] of sent messages.
   const ChatInputField({super.key, required this.onSend});
 
   /// Fired with the message text the user just sent.
-  final ValueChanged<String> onSend;
+  final Future<bool> Function(String) onSend;
 
   @override
   State<ChatInputField> createState() => _ChatInputFieldState();
@@ -18,6 +19,7 @@ class ChatInputField extends StatefulWidget {
 
 class _ChatInputFieldState extends State<ChatInputField> {
   final _controller = TextEditingController();
+  bool _sending = false;
 
   @override
   void dispose() {
@@ -25,11 +27,16 @@ class _ChatInputFieldState extends State<ChatInputField> {
     super.dispose();
   }
 
-  void _send() {
+  Future<void> _send() async {
     final text = _controller.text.trim();
-    if (text.isEmpty) return;
-    _controller.clear();
-    widget.onSend(text);
+    if (text.isEmpty || _sending) return;
+    setState(() => _sending = true);
+    try {
+      final sent = await widget.onSend(text);
+      if (sent && mounted) _controller.clear();
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
   }
 
   @override
@@ -43,6 +50,8 @@ class _ChatInputFieldState extends State<ChatInputField> {
             Expanded(
               child: TextField(
                 controller: _controller,
+                enabled: !_sending,
+                maxLength: 5000,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _send(),
                 decoration: const InputDecoration(
@@ -59,8 +68,14 @@ class _ChatInputFieldState extends State<ChatInputField> {
             ),
             const SizedBox(width: 8),
             IconButton(
-              icon: const Icon(Icons.send, color: AppColors.primary),
-              onPressed: _send,
+              icon: _sending
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.send, color: AppColors.primary),
+              onPressed: _sending ? null : _send,
               tooltip: 'Send',
             ),
           ],

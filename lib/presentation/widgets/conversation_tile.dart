@@ -55,17 +55,42 @@ class ConversationTile extends StatelessWidget {
         ),
       ),
       subtitle: Text(
-        conversation.lastMessage ?? 'No messages yet',
+        conversation.lastMessage ?? conversation.itemTitle ?? 'No messages yet',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          color: conversation.hasMessages ? AppColors.textGrey : AppColors.primaryLightActive,
+          color: conversation.hasMessages
+              ? AppColors.textGrey
+              : AppColors.primaryLightActive,
           fontSize: 14,
         ),
       ),
-      trailing: Text(
-        time,
-        style: const TextStyle(color: AppColors.textGrey, fontSize: 13),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            time,
+            style: const TextStyle(color: AppColors.textGrey, fontSize: 13),
+          ),
+          if (conversation.unreadCount > 0) ...[
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Text(
+                conversation.unreadCount > 99
+                    ? '99+'
+                    : '${conversation.unreadCount}',
+                style: const TextStyle(color: Colors.white, fontSize: 11),
+              ),
+            ),
+          ],
+        ],
       ),
       onTap: onTap,
     );

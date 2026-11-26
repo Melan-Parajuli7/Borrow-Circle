@@ -45,13 +45,17 @@ class AppConstants {
 
   // ---- chat endpoints ----
   static const String chatsEndpoint = '/chats';
-  static const String myChatsEndpoint = '/chats/my';
   static String chatMessagesEndpoint(int id) => '/chats/$id/messages';
   static String chatReadEndpoint(int id) => '/chats/$id/read';
+  static String startLoanChatEndpoint(int loanId) => '/chats/loan/$loanId';
+  static const String startAdminChatEndpoint = '/chats/admin';
 
   /// SharedPreferences key under which the JWT access token is stored.
   static const String tokenKey = 'accessToken';
 
   /// SharedPreferences key under which the JWT refresh token is stored.
   static const String refreshTokenKey = 'refreshToken';
+
+  /// Google Maps API key (from madpcpsgit2026).
+  static const String mapsApiKey = 'AIzaSyDmMzGmGbjESph5OSbXVTktwB3OkVd6W18';
 }

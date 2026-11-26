@@ -95,4 +95,38 @@ class ItemModel {
         'owner_avatar': ownerAvatar,
         'created_at': createdAt?.toIso8601String(),
       };
+
+  /// Returns a copy of this [ItemModel] with the given fields replaced.
+  ///
+  /// Any parameter left as `null` retains the existing value.
+  ItemModel copyWith({
+    int? id,
+    String? title,
+    String? description,
+    String? imageUrl,
+    String? category,
+    String? condition,
+    int? ownerId,
+    bool? isGroupItem,
+    String? groupName,
+    bool? isAvailable,
+    String? ownerName,
+    String? ownerAvatar,
+    DateTime? createdAt,
+  }) =>
+      ItemModel(
+        id: id ?? this.id,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        imageUrl: imageUrl ?? this.imageUrl,
+        category: category ?? this.category,
+        condition: condition ?? this.condition,
+        ownerId: ownerId ?? this.ownerId,
+        isGroupItem: isGroupItem ?? this.isGroupItem,
+        groupName: groupName ?? this.groupName,
+        isAvailable: isAvailable ?? this.isAvailable,
+        ownerName: ownerName ?? this.ownerName,
+        ownerAvatar: ownerAvatar ?? this.ownerAvatar,
+        createdAt: createdAt ?? this.createdAt,
+      );
 }

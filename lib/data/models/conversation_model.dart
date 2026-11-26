@@ -1,103 +1,63 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-/// A conversation between two users stored in Firestore.
-///
-/// Document path: `conversations/{conversationId}`.
-///
-/// Fields:
-/// - `participantIds`: stringified IDs of the two participants
-/// - `participantNames`: participant ID → display name (denormalized for the tile)
-/// - `lastMessage`: preview of the most recent message
-/// - `lastMessageAt`: timestamp of the most recent message
-/// - `itemId`: item the conversation is about, if any
+/// A conversation returned by the BorrowCircle chat API.
 class ConversationModel {
-  /// Creates a [ConversationModel] with the given properties.
-  ConversationModel({
+  const ConversationModel({
     required this.id,
-    required this.participantIds,
-    required this.participantNames,
+    required this.participantId,
+    required this.participantName,
+    this.participantAvatar,
+    this.loanId,
+    this.itemId,
+    this.itemTitle,
     this.lastMessage,
     this.lastMessageAt,
-    this.itemId,
+    this.unreadCount = 0,
   });
 
-  /// Firestore document ID.
-  final String id;
-
-  /// Stringified IDs of the two participants.
-  final List<String> participantIds;
-
-  /// Participant ID → display name, denormalized for the conversation tile.
-  final Map<String, String> participantNames;
-
-  /// Preview of the most recent message, if any.
+  final int id;
+  final int participantId;
+  final String participantName;
+  final String? participantAvatar;
+  final int? loanId;
+  final int? itemId;
+  final String? itemTitle;
   final String? lastMessage;
-
-  /// Timestamp of the most recent message, if any.
   final DateTime? lastMessageAt;
+  final int unreadCount;
 
-  /// Item the conversation is about, if any.
-  final String? itemId;
+  String otherParticipantId(String currentUid) => participantId.toString();
 
-  /// ID of the participant other than [currentUid].
-  String otherParticipantId(String currentUid) {
-    for (final id in participantIds) {
-      if (id != currentUid) return id;
-    }
-    return participantIds.isNotEmpty ? participantIds.first : '';
-  }
+  String otherParticipantName(String currentUid) => participantName;
 
-  /// Display name of the participant other than [currentUid].
-  String otherParticipantName(String currentUid) {
-    final other = otherParticipantId(currentUid);
-    return participantNames[other] ?? other;
-  }
-
-  /// Whether any messages have been exchanged yet.
   bool get hasMessages => lastMessage != null;
 
-  /// Creates a [ConversationModel] from a Firestore snapshot.
-  factory ConversationModel.fromSnapshot(
-    DocumentSnapshot<Map<String, dynamic>> snapshot,
-  ) {
-    final data = snapshot.data() ?? <String, dynamic>{};
-    return ConversationModel(
-      id: snapshot.id,
-      participantIds: (data['participantIds'] as List<dynamic>?)
-              ?.map((id) => id.toString())
-              .toList() ??
-          <String>[],
-      participantNames: (data['participantNames'] as Map<dynamic, dynamic>?)
-              ?.map((key, value) => MapEntry(key.toString(), value.toString())) ??
-          <String, String>{},
-      lastMessage: data['lastMessage'] as String?,
-      lastMessageAt: (data['lastMessageAt'] as Timestamp?)?.toDate(),
-      itemId: data['itemId'] as String?,
-    );
-  }
+  factory ConversationModel.fromJson(Map<String, dynamic> json) {
+    dynamic field(String camelCase, String snakeCase) =>
+        json[camelCase] ?? json[snakeCase];
+    int number(dynamic value) =>
+        value is num ? value.toInt() : int.parse(value.toString());
 
-  /// Converts this [ConversationModel] into a Firestore map.
-  Map<String, dynamic> toMap() => <String, dynamic>{
-        'participantIds': participantIds,
-        'participantNames': participantNames,
-        if (lastMessage != null) 'lastMessage': lastMessage,
-        if (lastMessageAt != null)
-          'lastMessageAt': Timestamp.fromDate(lastMessageAt!),
-        if (itemId != null) 'itemId': itemId,
-      };
-
-  /// Creates a copy with the given fields replaced.
-  ConversationModel copyWith({
-    String? lastMessage,
-    DateTime? lastMessageAt,
-  }) {
     return ConversationModel(
-      id: id,
-      participantIds: participantIds,
-      participantNames: participantNames,
-      lastMessage: lastMessage ?? this.lastMessage,
-      lastMessageAt: lastMessageAt ?? this.lastMessageAt,
-      itemId: itemId,
+      id: number(json['id']),
+      participantId: number(field('participantId', 'participant_id')),
+      participantName:
+          field('participantName', 'participant_name') as String? ??
+          'BorrowCircle user',
+      participantAvatar:
+          field('participantAvatar', 'participant_avatar') as String?,
+      loanId: field('loanId', 'loan_id') == null
+          ? null
+          : number(field('loanId', 'loan_id')),
+      itemId: field('itemId', 'item_id') == null
+          ? null
+          : number(field('itemId', 'item_id')),
+      itemTitle: field('itemTitle', 'item_title') as String?,
+      lastMessage: field('lastMessage', 'last_message') as String?,
+      lastMessageAt: DateTime.tryParse(
+        '${field('lastMessageAt', 'last_message_at')}',
+      ),
+      unreadCount: field('unreadCount', 'unread_count') == null
+          ? 0
+          : number(field('unreadCount', 'unread_count')),
     );
   }
 }

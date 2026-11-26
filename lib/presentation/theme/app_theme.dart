@@ -104,4 +104,95 @@ class AppTheme {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
   );
+
+  /// Dark counterpart of [light], using dark surface colours so the app
+  /// stays readable when the user picks the dark appearance.
+  static ThemeData get dark => ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      brightness: Brightness.dark,
+    ),
+    scaffoldBackgroundColor: AppColors.backgroundDark,
+
+    appBarTheme: const AppBarTheme(
+      backgroundColor: AppColors.surfaceDark,
+      foregroundColor: AppColors.textLight,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      centerTitle: true,
+    ),
+
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.surfaceDark,
+      hintStyle: const TextStyle(color: AppColors.textMutedDark),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+      border: _border(AppColors.borderDark),
+      enabledBorder: _border(AppColors.borderDark),
+      focusedBorder: _border(AppColors.primary, 1.5),
+      errorBorder: _border(AppColors.error),
+      focusedErrorBorder: _border(AppColors.error, 1.5),
+    ),
+
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textLight,
+        disabledBackgroundColor: AppColors.primaryLightActive,
+        disabledForegroundColor: AppColors.textMutedDark,
+        elevation: 0,
+        minimumSize: const Size.fromHeight(56),
+        shape: RoundedRectangleBorder(borderRadius: _radius),
+        textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+      ),
+    ),
+
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.primary,
+        minimumSize: const Size.fromHeight(56),
+        side: const BorderSide(color: AppColors.borderDark),
+        shape: RoundedRectangleBorder(borderRadius: _radius),
+        textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+      ),
+    ),
+
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: AppColors.primary,
+        textStyle: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+    ),
+
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: AppColors.surfaceDark,
+      indicatorColor: Colors.transparent,
+      height: 70,
+      iconTheme: WidgetStateProperty.resolveWith(
+        (states) => IconThemeData(
+          color: states.contains(WidgetState.selected)
+              ? AppColors.primary
+              : AppColors.textMutedDark,
+        ),
+      ),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) => TextStyle(
+          fontSize: 12,
+          fontWeight: states.contains(WidgetState.selected)
+              ? FontWeight.w700
+              : FontWeight.w500,
+          color: states.contains(WidgetState.selected)
+              ? AppColors.primary
+              : AppColors.textMutedDark,
+        ),
+      ),
+    ),
+
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+  );
 }

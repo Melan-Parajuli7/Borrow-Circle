@@ -44,86 +44,97 @@ class _LoansScreenState extends State<LoansScreen> {
         ? [...borrowing, ...lending]
         : (_tab == 1 ? borrowing : lending);
     final completed = _tab == 0
-        ? [...loanViewModel.completedBorrowing, ...loanViewModel.completedLending]
-        : (_tab == 1 ? loanViewModel.completedBorrowing : loanViewModel.completedLending);
+        ? [
+            ...loanViewModel.completedBorrowing,
+            ...loanViewModel.completedLending,
+          ]
+        : (_tab == 1
+              ? loanViewModel.completedBorrowing
+              : loanViewModel.completedLending);
 
     return SafeArea(
       child: Column(
         children: [
           const ScreenHeader(title: 'Active loans', showBack: false),
           Expanded(
-            child: loanViewModel.isLoading && loanViewModel.borrowing.isEmpty && loanViewModel.lending.isEmpty
+            child:
+                loanViewModel.isLoading &&
+                    loanViewModel.borrowing.isEmpty &&
+                    loanViewModel.lending.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : loanViewModel.error != null &&
                       loanViewModel.borrowing.isEmpty &&
                       loanViewModel.lending.isEmpty
-                    ? ErrorState(message: loanViewModel.error!, onRetry: loanViewModel.load)
-                    : RefreshIndicator(
-                        onRefresh: _refresh,
-                        child: ListView(
-                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                          physics: const AlwaysScrollableScrollPhysics(),
+                ? ErrorState(
+                    message: loanViewModel.error!,
+                    onRetry: loanViewModel.load,
+                  )
+                : RefreshIndicator(
+                    onRefresh: _refresh,
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        Row(
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _SummaryCard(
-                                    label: 'Borrowing',
-                                    count: borrowing.length,
-                                    sub: 'Items you hold',
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _SummaryCard(
-                                    label: 'Lending',
-                                    count: lending.length,
-                                    sub: 'Items you lent out',
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            SegmentedTabs(
-                              labels: const ['All active', 'Borrowing', 'Lending'],
-                              selected: _tab,
-                              onChanged: (i) => setState(() => _tab = i),
-                            ),
-                            const SizedBox(height: 16),
-                            if (active.isEmpty)
-                              const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 30),
-                                child: EmptyState(
-                                  icon: Icons.repeat,
-                                  title: 'No active loans',
-                                  message: 'Approved requests turn into loans after the handover.',
-                                ),
-                              )
-                            else
-                              for (final loan in active) ...[
-                                LoanCard(loan: loan, myId: me),
-                                const SizedBox(height: 14),
-                              ],
-                            if (completed.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Completed',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.textDark,
-                                ),
+                            Expanded(
+                              child: _SummaryCard(
+                                label: 'Borrowing',
+                                count: borrowing.length,
+                                sub: 'Items you hold',
                               ),
-                              const SizedBox(height: 12),
-                              for (final loan in completed) ...[
-                                LoanCard(loan: loan, myId: me),
-                                const SizedBox(height: 14),
-                              ],
-                            ],
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _SummaryCard(
+                                label: 'Lending',
+                                count: lending.length,
+                                sub: 'Items you lent out',
+                              ),
+                            ),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        SegmentedTabs(
+                          labels: const ['All active', 'Borrowing', 'Lending'],
+                          selected: _tab,
+                          onChanged: (i) => setState(() => _tab = i),
+                        ),
+                        const SizedBox(height: 16),
+                        if (active.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 30),
+                            child: EmptyState(
+                              icon: Icons.repeat,
+                              title: 'No active loans',
+                              message: 'Approved requests turn into loans after the handover.',
+                            ),
+                          )
+                        else
+                          for (final loan in active) ...[
+                            LoanCard(loan: loan, myId: me),
+                            const SizedBox(height: 14),
+                          ],
+                        if (completed.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Completed',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          for (final loan in completed) ...[
+                            LoanCard(loan: loan, myId: me),
+                            const SizedBox(height: 14),
+                          ],
+                        ],
+                      ],
                     ),
+                  ),
+          ),
         ],
       ),
     );
@@ -134,7 +145,11 @@ class _SummaryCard extends StatelessWidget {
   final String label;
   final int count;
   final String sub;
-  const _SummaryCard({required this.label, required this.count, required this.sub});
+  const _SummaryCard({
+    required this.label,
+    required this.count,
+    required this.sub,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -147,11 +162,18 @@ class _SummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.primary, fontSize: 16)),
+          Text(
+            label,
+            style: const TextStyle(color: AppColors.primary, fontSize: 16),
+          ),
           const SizedBox(height: 4),
           Text(
             count.toString().padLeft(2, '0'),
-            style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: AppColors.textDark),
+            style: const TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textDark,
+            ),
           ),
           const SizedBox(height: 4),
           Text(sub, style: const TextStyle(color: AppColors.textGrey)),
@@ -219,7 +241,10 @@ class LoanCard extends StatelessWidget {
             },
             child: const Text('Copy receipt'),
           ),
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
         ],
       ),
     );
@@ -339,7 +364,11 @@ class LoanCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.person_outline, color: AppColors.primary, size: 18),
+                        const Icon(
+                          Icons.person_outline,
+                          color: AppColors.primary,
+                          size: 18,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
@@ -378,7 +407,7 @@ class LoanCard extends StatelessWidget {
               style: const TextStyle(color: AppColors.textGrey),
             ),
           ],
-          if ((loan.isOut || loan.isReturned) &&
+          if ((loan.isOut || loan.awaitingHandover) &&
               loan.borrowerId != 0 &&
               loan.ownerId != 0) ...[
             const SizedBox(height: 14),
@@ -386,19 +415,17 @@ class LoanCard extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () async {
-                  final auth = context.read<AuthViewModel>();
                   final vm = context.read<ConversationViewModel>();
-                  if (vm.currentUid == null) {
-                    await vm.load(
-                      auth.user?.id.toString() ?? '',
-                      auth.user?.fullName ?? '',
+                  final conv = await vm.startLoanConversation(loan.id);
+                  if (!context.mounted) return;
+                  if (conv == null) {
+                    showSnack(
+                      context,
+                      vm.error ?? 'Could not open this conversation',
+                      isError: true,
                     );
+                    return;
                   }
-                  final conv = await vm.startConversation(
-                    (_iAmOwner ? loan.borrowerId : loan.ownerId).toString(),
-                    itemId: loan.itemId?.toString(),
-                  );
-                  if (conv == null) return;
                   Navigator.pushNamed(context, AppRoutes.chat, arguments: conv);
                 },
                 icon: const Icon(Icons.message, size: 18),

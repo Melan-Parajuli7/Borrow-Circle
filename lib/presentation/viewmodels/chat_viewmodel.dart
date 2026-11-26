@@ -11,6 +11,8 @@ class ChatViewModel extends BaseViewModel {
     required this.conversationId,
     required this.currentUid,
     required this.otherUid,
+    required this.currentUserName,
+    required this.userRole,
     this.otherName = '',
   });
 
@@ -18,6 +20,8 @@ class ChatViewModel extends BaseViewModel {
   final int conversationId;
   final String currentUid;
   final String otherUid;
+  final String currentUserName;
+  final String userRole;
   final String otherName;
 
   final List<MessageModel> _messages = [];
@@ -43,7 +47,11 @@ class ChatViewModel extends BaseViewModel {
     if (_isRefreshing || _disposed) return;
     _isRefreshing = true;
     try {
-      final messages = await chatService.messages(conversationId);
+      final messages = await chatService.messages(
+        conversationId: conversationId,
+        currentUserId: currentUid,
+        role: userRole,
+      );
       if (_disposed) return;
       _messages
         ..clear()
@@ -51,7 +59,11 @@ class ChatViewModel extends BaseViewModel {
       if (_messages.any(
         (message) => !message.isRead && !message.isSentBy(currentUid),
       )) {
-        await chatService.markRead(conversationId);
+        await chatService.markRead(
+          conversationId: conversationId,
+          currentUserId: currentUid,
+          role: userRole,
+        );
       }
       if (!_disposed) setBusy(false);
     } catch (error) {
@@ -66,7 +78,13 @@ class ChatViewModel extends BaseViewModel {
     if (trimmed.isEmpty || _disposed) return false;
     setBusy(true);
     try {
-      final message = await chatService.sendMessage(conversationId, trimmed);
+      final message = await chatService.sendMessage(
+        conversationId: conversationId,
+        currentUserId: currentUid,
+        senderName: currentUserName,
+        text: trimmed,
+        role: userRole,
+      );
       if (_disposed) return false;
       _messages.add(message);
       setBusy(false);
@@ -77,7 +95,11 @@ class ChatViewModel extends BaseViewModel {
     }
   }
 
-  Future<void> markRead() => chatService.markRead(conversationId);
+  Future<void> markRead() => chatService.markRead(
+    conversationId: conversationId,
+    currentUserId: currentUid,
+    role: userRole,
+  );
 
   @override
   void dispose() {

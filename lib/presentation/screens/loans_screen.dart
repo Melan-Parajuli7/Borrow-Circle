@@ -329,7 +329,25 @@ class LoanCard extends StatelessWidget {
     final messageButton = OutlinedButton.icon(
       onPressed: () async {
         final vm = context.read<ConversationViewModel>();
-        final conv = await vm.startLoanConversation(loan.id);
+        final user = context.read<AuthViewModel>().user;
+        if (user == null) {
+          showSnack(
+            context,
+            'Sign in to message this loan participant.',
+            isError: true,
+          );
+          return;
+        }
+        final isOwner = user.id == loan.ownerId;
+        final conv = await vm.startLoanConversation(
+          loanId: loan.id,
+          currentUserId: user.id.toString(),
+          userName: user.fullName,
+          otherUserId: isOwner ? loan.borrowerId : loan.ownerId,
+          otherUserName: isOwner ? loan.borrowerName : loan.ownerName,
+          itemId: loan.itemId,
+          itemTitle: loan.itemTitle,
+        );
         if (!context.mounted) return;
         if (conv == null) {
           showSnack(

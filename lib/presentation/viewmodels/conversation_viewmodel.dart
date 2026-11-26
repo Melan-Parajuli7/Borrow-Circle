@@ -10,6 +10,7 @@ class ConversationViewModel extends BaseViewModel {
 
   final ChatService _chatService;
   String? _currentUid;
+  String _currentRole = 'user';
   String? get currentUid => _currentUid;
 
   final List<ConversationModel> _conversations = [];
@@ -19,12 +20,13 @@ class ConversationViewModel extends BaseViewModel {
   bool _isRefreshing = false;
   bool _disposed = false;
 
-  Future<void> load(String currentUid) async {
-    if (_currentUid != currentUid) {
+  Future<void> load(String currentUid, {String role = 'user'}) async {
+    if (_currentUid != currentUid || _currentRole != role) {
       _refreshTimer?.cancel();
       _conversations.clear();
     }
     _currentUid = currentUid;
+    _currentRole = role;
     setBusy(true);
     await refresh();
     _refreshTimer?.cancel();
@@ -38,7 +40,12 @@ class ConversationViewModel extends BaseViewModel {
     if (_isRefreshing || _disposed) return;
     _isRefreshing = true;
     try {
-      final conversations = await _chatService.conversations();
+      final currentUid = _currentUid;
+      if (currentUid == null) return;
+      final conversations = await _chatService.conversations(
+        currentUserId: currentUid,
+        role: _currentRole,
+      );
       if (_disposed) return;
       _conversations
         ..clear()
@@ -51,11 +58,35 @@ class ConversationViewModel extends BaseViewModel {
     }
   }
 
-  Future<ConversationModel?> startLoanConversation(int loanId) =>
-      _start(() => _chatService.startLoanConversation(loanId));
+  Future<ConversationModel?> startLoanConversation({
+    required int loanId,
+    required String currentUserId,
+    required String userName,
+    required int otherUserId,
+    required String otherUserName,
+    required int itemId,
+    required String itemTitle,
+  }) => _start(
+    () => _chatService.startLoanConversation(
+      loanId: loanId,
+      currentUserId: currentUserId,
+      userName: userName,
+      otherUserId: otherUserId,
+      otherUserName: otherUserName,
+      itemId: itemId,
+      itemTitle: itemTitle,
+    ),
+  );
 
-  Future<ConversationModel?> startAdminConversation() =>
-      _start(_chatService.startAdminConversation);
+  Future<ConversationModel?> startAdminConversation({
+    required String currentUserId,
+    required String userName,
+  }) => _start(
+    () => _chatService.startAdminConversation(
+      currentUserId: currentUserId,
+      userName: userName,
+    ),
+  );
 
   Future<ConversationModel?> _start(
     Future<ConversationModel> Function() action,
@@ -87,6 +118,7 @@ class ConversationViewModel extends BaseViewModel {
     _refreshTimer?.cancel();
     _refreshTimer = null;
     _currentUid = null;
+    _currentRole = 'user';
     _conversations.clear();
     super.reset();
   }

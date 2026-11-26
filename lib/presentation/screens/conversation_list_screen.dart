@@ -28,15 +28,16 @@ class _ConversationListPageState extends State<ConversationListPage> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthViewModel>();
     final meId = auth.user?.id.toString() ?? '';
+    final isAdmin = auth.user?.role == 'admin';
     if (!_loaded && meId.isNotEmpty) {
       _loaded = true;
-      context.read<ConversationViewModel>().load(meId);
+      context.read<ConversationViewModel>().load(meId, role: auth.user!.role);
     }
 
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(68),
-        child: const ScreenHeader(title: 'Messages'),
+        child: ScreenHeader(title: isAdmin ? 'Support inbox' : 'Messages'),
       ),
       body: Consumer<ConversationViewModel>(
         builder: (context, vm, child) {
@@ -47,12 +48,15 @@ class _ConversationListPageState extends State<ConversationListPage> {
             return ErrorState(message: vm.error!, onRetry: () => vm.refresh());
           }
           if (vm.conversations.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.chat_bubble_outline,
-              title: 'No conversations yet',
-              message:
-                  'Message a lender or borrower from a loan, or contact '
-                  'an admin from your profile.',
+              title: isAdmin
+                  ? 'No support messages yet'
+                  : 'No conversations yet',
+              message: isAdmin
+                  ? 'Messages from users will appear here.'
+                  : 'Message a lender or borrower from a loan, or contact '
+                        'an admin from your profile.',
             );
           }
           return RefreshIndicator(

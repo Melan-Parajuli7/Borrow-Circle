@@ -68,7 +68,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        Provider<ChatService>(create: (_) => ChatService(apiClient)),
+        Provider<ChatService>(create: (_) => ChatService(prefs)),
         // Authentication & session.
         ChangeNotifierProvider(create: (_) => AuthViewModel(authRepository)),
 
@@ -98,7 +98,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => GroupViewModel(groupRepository)),
         ChangeNotifierProvider(create: (_) => TaskViewModel(taskRepository)),
 
-        // API-backed chat.
+        // Chat data is stored locally for frontend-only previews.
         ChangeNotifierProvider(
           create: (context) =>
               ConversationViewModel(context.read<ChatService>()),

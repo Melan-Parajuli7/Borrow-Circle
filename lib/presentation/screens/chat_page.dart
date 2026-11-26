@@ -44,6 +44,8 @@ class _ChatPageState extends State<ChatPage> {
         conversationId: conversation.id,
         currentUid: currentUid,
         otherUid: conversation.otherParticipantId(currentUid),
+        currentUserName: auth.user?.fullName ?? '',
+        userRole: auth.user?.role ?? 'user',
         otherName: conversation.otherParticipantName(currentUid),
       ),
       child: _ChatPageBody(
@@ -128,6 +130,19 @@ class _ChatPageBodyState extends State<_ChatPageBody> {
                 style: const TextStyle(color: AppColors.textDark, fontSize: 13),
               ),
             ),
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Text(
+              'Frontend preview: messages are saved on this device only.',
+              style: TextStyle(color: AppColors.textGrey, fontSize: 12),
+            ),
+          ),
           Expanded(
             child: vm.isLoading && vm.messages.isEmpty
                 ? const Center(child: CircularProgressIndicator())

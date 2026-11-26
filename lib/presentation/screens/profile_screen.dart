@@ -16,6 +16,7 @@ import '../viewmodels/group_viewmodel.dart';
 import '../viewmodels/item_viewmodel.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import '../viewmodels/review_viewmodel.dart';
+import '../routes/app_routes.dart';
 import './account_screen.dart';
 import './calendar_screen.dart';
 import './contact_admin_screen.dart';
@@ -375,11 +376,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onTap: () =>
                           _open(context, const AccountSettingsScreen()),
                     ),
-                    _MenuRow(
-                      icon: Icons.support_agent_outlined,
-                      title: 'Contact admin',
-                      onTap: () => _open(context, const ContactAdminScreen()),
-                    ),
+                    if (user.role == 'admin')
+                      _MenuRow(
+                        icon: Icons.inbox_outlined,
+                        title: 'Support inbox',
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          AppRoutes.conversations,
+                        ),
+                      )
+                    else
+                      _MenuRow(
+                        icon: Icons.support_agent_outlined,
+                        title: 'Contact admin',
+                        onTap: () => _open(context, const ContactAdminScreen()),
+                      ),
                     _MenuRow(
                       icon: Icons.help_outline,
                       title: 'Help & campus guidelines',

@@ -116,6 +116,36 @@ const findByRequester = (requesterId, opts) =>
 const findByOwner = (ownerId, opts) =>
   findList("i.owner_id = $1", [ownerId], opts);
 
+// Admin list: every request, newest first, with optional status/search
+const findAll = async ({ status, search, limit = 10, offset = 0 } = {}) => {
+  const params = [];
+  let where = "TRUE";
+
+  if (status) {
+    params.push(status);
+    where += ` AND br.status = $${params.length}`;
+  }
+  if (search) {
+    params.push(`%${search}%`);
+    where += ` AND (i.title ILIKE $${params.length}
+              OR req.full_name ILIKE $${params.length}
+              OR own.full_name ILIKE $${params.length})`;
+  }
+
+  const count = await pool.query(
+    `SELECT COUNT(*)::int AS total ${REQUEST_FROM} WHERE ${where}`,
+    params,
+  );
+  const { rows } = await pool.query(
+    `SELECT ${REQUEST_SELECT} ${REQUEST_FROM}
+       WHERE ${where}
+       ORDER BY br.created_at DESC, br.id DESC
+       LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+    [...params, limit, offset],
+  );
+  return { requests: rows, total: count.rows[0].total };
+};
+
 // Atomic status change: it only succeed if the row is STILL in 'fromStatus'.
 //if two people click at the same time, only one UPDATE matches the WHERE.
 const updateStatus = async (id, fromStatus, toStatus) => {
@@ -135,5 +165,6 @@ module.exports = {
   hasApprovedOverlap,
   findByRequester,
   findByOwner,
+  findAll,
   updateStatus,
 };

@@ -1,0 +1,254 @@
+/* Page scaffolding shared by every dashboard screen */
+.page { display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+.page-title { font-size: var(--font-size-2xl); font-weight: 800; }
+.page-subtitle { color: var(--color-text-grey); font-size: var(--font-size-sm); }
+
+/* Filters row */
+.filters {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.filters .field { min-width: 180px; }
+.filters .field-search { min-width: 240px; flex: 1; }
+
+/* Detail layout */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-lg);
+}
+@media (min-width: 1024px) {
+  .detail-grid { grid-template-columns: 340px 1fr; }
+}
+
+.info-list { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px dashed var(--color-border);
+}
+.info-row:last-child { border-bottom: none; }
+.info-label { color: var(--color-text-grey); }
+.info-value { font-weight: 600; text-align: right; word-break: break-word; }
+
+/* Dashboard stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--spacing-md);
+}
+.stat-card {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+.stat-label {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-grey);
+  font-weight: 700;
+}
+.stat-value { font-size: var(--font-size-3xl); font-weight: 800; color: var(--color-primary); }
+.stat-hint { font-size: var(--font-size-xs); color: var(--color-text-grey); }
+
+.section-title { font-size: var(--font-size-lg); font-weight: 700; }
+.list-stack { display: flex; flex-direction: column; gap: var(--spacing-lg); }
+
+/* Login — glassmorphism card on a teal gradient with floating blobs */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #083f3a 0%, var(--color-primary) 45%, #14b8a6 100%);
+}
+
+.login-blob {
+  position: absolute;
+  border-radius: var(--radius-full);
+  filter: blur(70px);
+  pointer-events: none;
+}
+.login-blob-1 {
+  width: 420px;
+  height: 420px;
+  background: #2dd4bf;
+  opacity: 0.5;
+  top: -140px;
+  left: -110px;
+  animation: login-float 13s ease-in-out infinite;
+}
+.login-blob-2 {
+  width: 380px;
+  height: 380px;
+  background: #0e7490;
+  opacity: 0.55;
+  bottom: -150px;
+  right: -90px;
+  animation: login-float 17s ease-in-out infinite reverse;
+}
+.login-blob-3 {
+  width: 260px;
+  height: 260px;
+  background: var(--color-tertiary);
+  opacity: 0.22;
+  top: 45%;
+  left: 62%;
+  animation: login-float 21s ease-in-out infinite;
+}
+
+@keyframes login-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(34px, -28px) scale(1.09); }
+}
+
+.login-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-xl);
+  /* the glass */
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    0 24px 48px rgba(2, 25, 23, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+
+.login-brand { display: flex; align-items: center; gap: var(--spacing-md); }
+.login-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  background: #fff;
+  object-fit: cover;
+  box-shadow: 0 8px 20px rgba(2, 25, 23, 0.28);
+}
+.login-title {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 8px rgba(2, 25, 23, 0.25);
+}
+.login-subtitle { color: rgba(255, 255, 255, 0.82); font-size: var(--font-size-sm); }
+
+/* inputs on glass — light fields with dark text, like the app's inputs */
+.login-label { color: rgba(255, 255, 255, 0.92); }
+.login-input {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(255, 255, 255, 0.65);
+  color: var(--color-text-dark);
+  font-size: var(--font-size-base);
+  padding: 11px var(--spacing-md);
+}
+.login-input::placeholder { color: #9cb4ae; }
+.login-input:focus {
+  border-color: #fff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
+}
+
+/* password reveal — same grey eye as the Flutter app (AppColors.textGrey) */
+.login-eye {
+  border: none;
+  background: transparent;
+  color: var(--color-text-grey);
+  cursor: pointer;
+  padding: 5px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+}
+.login-eye:hover { color: var(--color-primary); background: rgba(15, 118, 110, 0.1); }
+.login-eye:focus-visible { outline: 2px solid var(--color-primary-light-active); }
+
+/* the submit button pops as solid white on glass */
+.login-submit { background: #fff; color: var(--color-primary); margin-top: var(--spacing-xs); }
+.login-submit:hover:not(:disabled) {
+  background: var(--color-primary-light-active);
+  color: var(--color-text-dark);
+}
+
+/* error banner on glass */
+.login-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  background: rgba(220, 38, 38, 0.28);
+  border: 1px solid rgba(255, 160, 160, 0.55);
+  color: #fff;
+  backdrop-filter: blur(6px);
+}
+.login-error svg { flex-shrink: 0; margin-top: 1px; }
+
+.login-footer {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* Support chat thread */
+.chat-thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  min-height: 320px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.chat-bubble {
+  max-width: 75%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  align-self: flex-start;
+}
+.chat-bubble-admin {
+  align-self: flex-end;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.chat-meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-grey);
+  margin-bottom: 2px;
+}
+.chat-bubble-admin .chat-meta { color: rgba(255, 255, 255, 0.8); }

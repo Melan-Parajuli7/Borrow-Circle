@@ -136,6 +136,50 @@ const findByBorrower = (userId, opts) =>
 const findByOwner = (userId, opts) =>
   findList("l.owner_id = $1", [userId], opts);
 
+// Admin list: every loan, newest first, with optional status / stage / search.
+// `stage` mirrors the derived CASE in LOAN_SELECT so filtering matches what
+// the apps see (the column itself is never stored).
+const STAGE_WHERE = {
+  awaiting_handover:
+    "l.handed_over_at IS NULL AND l.returned_at IS NULL",
+  on_loan:
+    "l.handed_over_at IS NOT NULL AND l.returned_at IS NULL AND l.status <> 'overdue'",
+  overdue: "l.status = 'overdue' AND l.returned_at IS NULL",
+  returned: "l.returned_at IS NOT NULL",
+};
+
+const findAll = async ({ status, stage, search, limit = 10, offset = 0 } = {}) => {
+  const params = [];
+  let where = "TRUE";
+
+  if (status) {
+    params.push(status);
+    where += ` AND l.status = $${params.length}`;
+  }
+  if (stage) {
+    where += ` AND (${STAGE_WHERE[stage]})`;
+  }
+  if (search) {
+    params.push(`%${search}%`);
+    where += ` AND (i.title ILIKE $${params.length}
+              OR b.full_name ILIKE $${params.length}
+              OR o.full_name ILIKE $${params.length})`;
+  }
+
+  const count = await pool.query(
+    `SELECT COUNT(*)::int AS total ${LOAN_FROM} WHERE ${where}`,
+    params,
+  );
+  const { rows } = await pool.query(
+    `SELECT ${LOAN_SELECT} ${LOAN_FROM}
+       WHERE ${where}
+       ORDER BY l.created_at DESC, l.id DESC
+       LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+    [...params, limit, offset],
+  );
+  return { loans: rows, total: count.rows[0].total };
+};
+
 // Handover: loans gets a timestamp AND the item becomes unavailable together.
 // The Where makes it atomic: it only matches if the handover hasn't happened yet.
 const markHandedOver = (loanId) =>
@@ -176,6 +220,7 @@ module.exports = {
     itemIsOnLoan,
     findByBorrower,
     findByOwner,
+    findAll,
     markHandedOver,
     markReturned
 }

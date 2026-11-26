@@ -1,0 +1,45 @@
+/* Base element styles + small shared utilities */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-surface);
+  color: var(--color-text-dark);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+h1, h2, h3, h4 {
+  line-height: 1.25;
+  color: var(--color-text-dark);
+}
+
+/* ---- reusable helpers ---- */
+.text-grey { color: var(--color-text-grey); }
+.text-error { color: var(--color-error); }
+.text-success { color: var(--color-success); }
+.text-sm { font-size: var(--font-size-sm); }
+.text-center { text-align: center; }
+
+.stack { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.row { display: flex; align-items: center; gap: var(--spacing-sm); }
+.row-wrap { display: flex; align-items: center; gap: var(--spacing-sm); flex-wrap: wrap; }
+.grow { flex: 1; }
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

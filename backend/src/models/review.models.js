@@ -71,6 +71,37 @@ const findList = async (whereSql , values , {limit = 10, offset = 0} = {}) => {
 const findReceived = (userId , opts) => findList("r.reviewee_id = $1", [userId], opts);
 const findGiven = (userId , opts) => findList("r.reviewer_id = $1", [userId], opts);
 
+// Admin list: every review, newest first, with optional rating/search filters
+const findAll = async ({ rating, search, limit = 10, offset = 0 } = {}) => {
+  const params = [];
+  let where = "TRUE";
+
+  if (rating) {
+    params.push(rating);
+    where += ` AND r.rating = $${params.length}`;
+  }
+  if (search) {
+    params.push(`%${search}%`);
+    where += ` AND (rv.full_name ILIKE $${params.length}
+              OR re.full_name ILIKE $${params.length}
+              OR i.title ILIKE $${params.length}
+              OR r.comment ILIKE $${params.length})`;
+  }
+
+  const count = await pool.query(
+    `SELECT COUNT(*)::int AS total ${REVIEW_FORM} WHERE ${where}`,
+    params,
+  );
+  const { rows } = await pool.query(
+    `SELECT ${REVIEW_SELECT} ${REVIEW_FORM}
+       WHERE ${where}
+       ORDER BY r.created_at DESC, r.id DESC
+       LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+    [...params, limit, offset],
+  );
+  return { reviews: rows, total: count.rows[0].total };
+};
+
 const findByLoan = async (loanId) => {
     const {rows} = await pool.query(
         `SELECT ${REVIEW_SELECT} ${REVIEW_FORM} WHERE r.loan_id = $1 ORDER BY r.created_at`,
@@ -90,6 +121,12 @@ const getSummary = async (userId) => {
     return rows[0];
 };
 
+// Admin moderation: remove an inappropriate review
+const remove = async (id) => {
+    const {rowCount} = await pool.query(`DELETE FROM reviews WHERE id = $1`, [id]);
+    return rowCount > 0;
+};
+
 module.exports = {
     findLoan,
     findUser,
@@ -97,6 +134,8 @@ module.exports = {
     create,
     findReceived,
     findGiven,
+    findAll,
     findByLoan, 
+    remove,
     getSummary
 }

@@ -13,8 +13,8 @@ import '../viewmodels/review_viewmodel.dart';
 import './handover_screen.dart';
 import './return_item_screen.dart';
 import './review_screen.dart';
+import './loan_chat_page.dart';
 import '../utils/receipt_export_service.dart';
-import '../routes/app_routes.dart';
 
 /// "Active loans" screen.
 class LoansScreen extends StatefulWidget {
@@ -322,6 +322,34 @@ class LoanCard extends StatelessWidget {
       );
     }
 
+    final canMessage =
+        (loan.isOut || loan.awaitingHandover) &&
+        loan.borrowerId != 0 &&
+        loan.ownerId != 0;
+    final messageButton = OutlinedButton.icon(
+      onPressed: () async {
+        final vm = context.read<ConversationViewModel>();
+        final conv = await vm.startLoanConversation(loan.id);
+        if (!context.mounted) return;
+        if (conv == null) {
+          showSnack(
+            context,
+            vm.error ?? 'Could not open this conversation',
+            isError: true,
+          );
+          return;
+        }
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => LoanChatPage(conversation: conv, loan: loan),
+          ),
+        );
+      },
+      icon: const Icon(Icons.message, size: 18),
+      label: const Text('Message'),
+    );
+
     return AppCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -407,33 +435,22 @@ class LoanCard extends StatelessWidget {
               style: const TextStyle(color: AppColors.textGrey),
             ),
           ],
-          if ((loan.isOut || loan.awaitingHandover) &&
-              loan.borrowerId != 0 &&
-              loan.ownerId != 0) ...[
+          if (loan.awaitingHandover && canMessage && action != null) ...[
             const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () async {
-                  final vm = context.read<ConversationViewModel>();
-                  final conv = await vm.startLoanConversation(loan.id);
-                  if (!context.mounted) return;
-                  if (conv == null) {
-                    showSnack(
-                      context,
-                      vm.error ?? 'Could not open this conversation',
-                      isError: true,
-                    );
-                    return;
-                  }
-                  Navigator.pushNamed(context, AppRoutes.chat, arguments: conv);
-                },
-                icon: const Icon(Icons.message, size: 18),
-                label: const Text('Message'),
-              ),
+            Row(
+              children: [
+                Expanded(child: messageButton),
+                const SizedBox(width: 8),
+                Expanded(child: action),
+              ],
             ),
+          ] else ...[
+            if (canMessage) ...[
+              const SizedBox(height: 14),
+              SizedBox(width: double.infinity, child: messageButton),
+            ],
+            if (action != null) ...[const SizedBox(height: 14), action],
           ],
-          if (action != null) ...[const SizedBox(height: 14), action],
         ],
       ),
     );

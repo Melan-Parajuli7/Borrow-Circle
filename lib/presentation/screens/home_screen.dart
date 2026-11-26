@@ -206,11 +206,12 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        shape: const CircleBorder(),
         onPressed: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const AddItemScreen()),
         ),
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: AppColors.primary),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
@@ -286,14 +287,15 @@ class _HomeTabState extends State<HomeTab> {
                         ),
                         Stack(
                           children: [
-                            SquareIconButton(
-                              icon: Icons.notifications_none,
-                              onTap: () => Navigator.push(
+                            IconButton(
+                              color: AppColors.primary,
+                              onPressed: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => const NotificationsScreen(),
                                 ),
                               ),
+                              icon: const Icon(Icons.notifications_none),
                             ),
                             if (unreadCount > 0)
                               Positioned(

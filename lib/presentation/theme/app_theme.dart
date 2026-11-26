@@ -24,6 +24,7 @@ class AppTheme {
       error: AppColors.error,
     ),
     scaffoldBackgroundColor: AppColors.background,
+    hoverColor: AppColors.primary.withValues(alpha: 0.08),
 
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.white,
@@ -55,7 +56,8 @@ class AppTheme {
         minimumSize: const Size.fromHeight(56),
         shape: RoundedRectangleBorder(borderRadius: _radius),
         textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-      ),
+        overlayColor: Colors.white12,
+      ).copyWith(mouseCursor: WidgetStateMouseCursor.clickable),
     ),
 
     outlinedButtonTheme: OutlinedButtonThemeData(
@@ -65,15 +67,27 @@ class AppTheme {
         side: const BorderSide(color: AppColors.border),
         shape: RoundedRectangleBorder(borderRadius: _radius),
         textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-      ),
+        overlayColor: AppColors.primary.withValues(alpha: 0.1),
+      ).copyWith(mouseCursor: WidgetStateMouseCursor.clickable),
     ),
 
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: AppColors.primary,
         textStyle: const TextStyle(fontWeight: FontWeight.w600),
-      ),
+        overlayColor: AppColors.primary.withValues(alpha: 0.1),
+      ).copyWith(mouseCursor: WidgetStateMouseCursor.clickable),
     ),
+
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(
+        overlayColor: AppColors.primary.withValues(alpha: 0.1),
+      ).copyWith(mouseCursor: WidgetStateMouseCursor.clickable),
+    ),
+
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      hoverColor: Colors.white.withValues(alpha: 0.12),
+    ).copyWith(mouseCursor: WidgetStateMouseCursor.clickable),
 
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Colors.white,
@@ -115,6 +129,7 @@ class AppTheme {
       brightness: Brightness.dark,
     ),
     scaffoldBackgroundColor: AppColors.backgroundDark,
+    hoverColor: AppColors.primary.withValues(alpha: 0.18),
 
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.surfaceDark,
@@ -146,7 +161,8 @@ class AppTheme {
         minimumSize: const Size.fromHeight(56),
         shape: RoundedRectangleBorder(borderRadius: _radius),
         textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-      ),
+        overlayColor: Colors.white12,
+      ).copyWith(mouseCursor: WidgetStateMouseCursor.clickable),
     ),
 
     outlinedButtonTheme: OutlinedButtonThemeData(
@@ -156,14 +172,27 @@ class AppTheme {
         side: const BorderSide(color: AppColors.borderDark),
         shape: RoundedRectangleBorder(borderRadius: _radius),
         textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-      ),
+        overlayColor: AppColors.primary.withValues(alpha: 0.18),
+      ).copyWith(mouseCursor: WidgetStateMouseCursor.clickable),
     ),
 
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: AppColors.primary,
         textStyle: const TextStyle(fontWeight: FontWeight.w600),
-      ),
+        overlayColor: AppColors.primary.withValues(alpha: 0.18),
+      ).copyWith(mouseCursor: WidgetStateMouseCursor.clickable),
+    ),
+
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(
+        overlayColor: AppColors.primary.withValues(alpha: 0.18),
+      ).copyWith(mouseCursor: WidgetStateMouseCursor.clickable),
+    ),
+
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      hoverColor: Colors.white.withValues(alpha: 0.12),
+      mouseCursor: WidgetStateMouseCursor.clickable,
     ),
 
     navigationBarTheme: NavigationBarThemeData(

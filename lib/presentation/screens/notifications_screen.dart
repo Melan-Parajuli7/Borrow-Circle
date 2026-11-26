@@ -57,8 +57,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         return InkWell(
                           onTap: () => notifications.markRead(notification.id),
                           borderRadius: BorderRadius.circular(18),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
+                          child: Ink(
                             decoration: BoxDecoration(
                               color: notification.isRead
                                   ? Colors.white
@@ -66,32 +65,36 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               borderRadius: BorderRadius.circular(18),
                               border: Border.all(color: AppColors.border),
                             ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  notification.isRead
-                                      ? Icons.notifications_none
-                                      : Icons.notifications_active_outlined,
-                                  color: AppColors.primary,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        notification.title,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(notification.message),
-                                    ],
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    notification.isRead
+                                        ? Icons.notifications_none
+                                        : Icons.notifications_active_outlined,
+                                    color: AppColors.primary,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          notification.title,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(notification.message),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );

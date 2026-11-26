@@ -135,9 +135,10 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 const SizedBox(height: 24),
 
                 // Image picker
-                GestureDetector(
+                InkWell(
                   onTap: _pickImage,
-                  child: Container(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Ink(
                     height: 200,
                     width: double.infinity,
                     decoration: BoxDecoration(

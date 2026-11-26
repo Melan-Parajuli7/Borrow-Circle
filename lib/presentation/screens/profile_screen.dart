@@ -12,20 +12,16 @@ import '../utils/validators.dart';
 import '../widgets/app_widgets.dart';
 import '../../data/models/user_model.dart';
 import '../viewmodels/auth_viewmodel.dart';
-import '../viewmodels/conversation_viewmodel.dart';
 import '../viewmodels/group_viewmodel.dart';
 import '../viewmodels/item_viewmodel.dart';
 import '../viewmodels/loan_viewmodel.dart';
 import '../viewmodels/review_viewmodel.dart';
-import '../viewmodels/task_viewmodel.dart';
-import '../routes/app_routes.dart';
 import './account_screen.dart';
 import './calendar_screen.dart';
+import './contact_admin_screen.dart';
 import './groups_screen.dart';
 import './my_listings_screen.dart';
 import './loans_screen.dart';
-import './notifications_screen.dart';
-import './tasks_screen.dart';
 
 // =====================================================================
 //  PROFILE SCREEN
@@ -125,21 +121,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<void> _contactAdmin() async {
-    final vm = context.read<ConversationViewModel>();
-    final conversation = await vm.startAdminConversation();
-    if (!mounted) return;
-    if (conversation == null) {
-      showSnack(
-        context,
-        vm.error ?? 'Could not open admin support',
-        isError: true,
-      );
-      return;
-    }
-    Navigator.pushNamed(context, AppRoutes.chat, arguments: conversation);
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthViewModel>().user;
@@ -147,7 +128,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final items = context.watch<ItemViewModel>();
     final reviews = context.watch<ReviewViewModel>();
     final groups = context.watch<GroupViewModel>();
-    final tasks = context.watch<TaskViewModel>();
 
     if (user == null) return const SizedBox.shrink();
 
@@ -390,17 +370,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _MenuCard(
                   children: [
                     _MenuRow(
-                      icon: Icons.notifications_none,
-                      title: 'Notifications',
-                      onTap: () => _open(context, const NotificationsScreen()),
-                    ),
-                    _MenuRow(
-                      icon: Icons.task_alt,
-                      title: 'My Tasks',
-                      trailing: '${tasks.taskCount} tasks',
-                      onTap: () => _open(context, const TasksScreen()),
-                    ),
-                    _MenuRow(
                       icon: Icons.settings_outlined,
                       title: 'Account settings',
                       onTap: () =>
@@ -409,7 +378,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _MenuRow(
                       icon: Icons.support_agent_outlined,
                       title: 'Contact admin',
-                      onTap: _contactAdmin,
+                      onTap: () => _open(context, const ContactAdminScreen()),
                     ),
                     _MenuRow(
                       icon: Icons.help_outline,
@@ -701,8 +670,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      GestureDetector(
+                      InkWell(
                         onTap: _pick,
+                        customBorder: const CircleBorder(),
                         child: Stack(
                           children: [
                             UserAvatar(

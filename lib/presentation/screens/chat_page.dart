@@ -16,7 +16,13 @@ import '../widgets/message_bubble.dart';
 /// [ChatViewModel] to this conversation and never calls the API directly.
 class ChatPage extends StatefulWidget {
   /// Creates a [ChatPage] with an optional [key].
-  const ChatPage({super.key});
+  const ChatPage({super.key, this.conversation, this.contextNote});
+
+  /// Conversation passed directly when opened from a loan card.
+  final ConversationModel? conversation;
+
+  /// Optional context banner for purpose-specific chat pages.
+  final String? contextNote;
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -26,6 +32,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     final conversation =
+        widget.conversation ??
         ModalRoute.of(context)!.settings.arguments as ConversationModel;
     final auth = context.read<AuthViewModel>();
     final currentUid = auth.user?.id.toString() ?? '';
@@ -39,17 +46,26 @@ class _ChatPageState extends State<ChatPage> {
         otherUid: conversation.otherParticipantId(currentUid),
         otherName: conversation.otherParticipantName(currentUid),
       ),
-      child: _ChatPageBody(conversation: conversation, partner: partnerName),
+      child: _ChatPageBody(
+        conversation: conversation,
+        partner: partnerName,
+        contextNote: widget.contextNote,
+      ),
     );
   }
 }
 
 class _ChatPageBody extends StatefulWidget {
   /// Creates a [_ChatPageBody] showing [conversation] with [partner] name.
-  const _ChatPageBody({required this.conversation, required this.partner});
+  const _ChatPageBody({
+    required this.conversation,
+    required this.partner,
+    this.contextNote,
+  });
 
   final ConversationModel conversation;
   final String partner;
+  final String? contextNote;
 
   @override
   State<_ChatPageBody> createState() => _ChatPageBodyState();
@@ -98,6 +114,20 @@ class _ChatPageBodyState extends State<_ChatPageBody> {
       ),
       body: Column(
         children: [
+          if (widget.contextNote != null)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                widget.contextNote!,
+                style: const TextStyle(color: AppColors.textDark, fontSize: 13),
+              ),
+            ),
           Expanded(
             child: vm.isLoading && vm.messages.isEmpty
                 ? const Center(child: CircularProgressIndicator())

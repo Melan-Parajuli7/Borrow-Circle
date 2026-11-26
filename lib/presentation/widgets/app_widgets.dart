@@ -248,7 +248,7 @@ class SquareIconButton extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: onTap,
-      child: Container(
+      child: Ink(
         height: 48,
         width: 48,
         decoration: BoxDecoration(
@@ -278,28 +278,30 @@ class PillTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    return Ink(
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 16, color: fg),
-            const SizedBox(width: 5),
-          ],
-          Text(
-            text,
-            style: TextStyle(
-              color: fg,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 16, color: fg),
+              const SizedBox(width: 5),
+            ],
+            Text(
+              text,
+              style: TextStyle(
+                color: fg,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -433,9 +435,9 @@ class SegmentedTabs extends StatelessWidget {
         children: [
           for (var i = 0; i < labels.length; i++)
             Expanded(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
+              child: InkWell(
                 onTap: () => onChanged(i),
+                borderRadius: BorderRadius.circular(13),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   padding: const EdgeInsets.symmetric(vertical: 13),
@@ -489,8 +491,9 @@ class SectionHeader extends StatelessWidget {
           ),
         ),
         if (actionText != null)
-          GestureDetector(
+          InkWell(
             onTap: onAction,
+            borderRadius: BorderRadius.circular(8),
             child: Text(
               actionText!,
               style: const TextStyle(
@@ -640,8 +643,9 @@ class StarRating extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         for (var i = 1; i <= 5; i++)
-          GestureDetector(
+          InkWell(
             onTap: onChanged == null ? null : () => onChanged!(i),
+            borderRadius: BorderRadius.circular(20),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Icon(
@@ -670,54 +674,56 @@ class ItemCard extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(22),
-      child: Container(
+      child: Ink(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: AppColors.border),
         ),
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            NetImage(
-              url: AppStatic.imageUrl(item.imageUrl),
-              height: 125,
-              width: double.infinity,
-              radius: 14,
-            ),
-            const SizedBox(height: 10),
-            PillTag(
-              text: item.isGroupItem ? 'Group item' : 'Peer item',
-              icon: item.isGroupItem
-                  ? Icons.groups_outlined
-                  : Icons.person_outline,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              item.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textDark,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              NetImage(
+                url: AppStatic.imageUrl(item.imageUrl),
+                height: 125,
+                width: double.infinity,
+                radius: 14,
               ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              '$who \u00b7 ${item.isAvailable ? 'Available' : 'On loan'}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppColors.textGrey),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              item.category ?? 'Other',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppColors.textGrey, fontSize: 13),
-            ),
-          ],
+              const SizedBox(height: 10),
+              PillTag(
+                text: item.isGroupItem ? 'Group item' : 'Peer item',
+                icon: item.isGroupItem
+                    ? Icons.groups_outlined
+                    : Icons.person_outline,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                item.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textDark,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                '$who \u00b7 ${item.isAvailable ? 'Available' : 'On loan'}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: AppColors.textGrey),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                item.category ?? 'Other',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: AppColors.textGrey, fontSize: 13),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -745,14 +751,13 @@ class AppCard extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: padding,
+      child: Ink(
         decoration: BoxDecoration(
           color: color ?? Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: borderColor ?? AppColors.border),
         ),
-        child: child,
+        child: Padding(padding: padding, child: child),
       ),
     );
   }
